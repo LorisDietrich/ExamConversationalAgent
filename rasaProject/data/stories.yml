@@ -1,0 +1,162 @@
+version: "3.1"
+
+- story: happy path
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_great
+  - action: utter_happy
+
+- story: sad path 1
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_unhappy
+  - action: utter_cheer_up
+  - action: utter_did_that_help
+  - intent: affirm
+  - action: utter_happy
+
+- story: sad path 2
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_unhappy
+  - action: utter_cheer_up
+  - action: utter_did_that_help
+  - intent: deny
+  - action: utter_goodbye
+
+- story: User interrupts the pizza form and doesn't want to continue
+  steps:
+  - intent: buy_pizza
+  - action: simple_pizza_form
+  - active_loop: simple_pizza_form
+  - intent: stop_pizza
+  - action: action_deactivate_loop
+  - action: action_reset_pizza_slots
+  - active_loop: null
+  - action: utter_stop_pizza
+  #story to activate two times the pizza form
+
+- story: interactive_story_1
+  steps:
+  - active_loop: simple_pizza_form
+  - intent: stop_pizza
+  - action: action_deactivate_loop
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_reset_pizza_slots
+  - slot_was_set:
+    - pizza_type: null
+  - slot_was_set:
+    - pizza_size: null
+  - action: utter_stop_pizza
+
+- story: interactive_story_2
+  steps:
+  - intent: buy_pizza
+  - action: simple_pizza_form
+  - active_loop: simple_pizza_form
+  - slot_was_set:
+    - requested_slot: pizza_size
+  - slot_was_set:
+    - pizza_size: l
+  - slot_was_set:
+    - pizza_size: l
+  - slot_was_set:
+    - requested_slot: pizza_type
+  - intent: stop_pizza
+  - action: action_deactivate_loop
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_reset_pizza_slots
+  - slot_was_set:
+    - pizza_type: null
+  - slot_was_set:
+    - pizza_size: null
+  - action: utter_stop_pizza
+
+- story: interactive_story_3
+  steps:
+  - intent: buy_pizza
+  - action: simple_pizza_form
+  - active_loop: simple_pizza_form
+  - slot_was_set:
+    - requested_slot: pizza_size
+  - intent: stop_pizza
+  - action: action_deactivate_loop
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_reset_pizza_slots
+  - slot_was_set:
+    - pizza_type: null
+  - slot_was_set:
+    - pizza_size: null
+  - action: utter_stop_pizza
+
+- story: interactive_story_4
+  steps:
+  - intent: buy_pizza
+  - action: simple_pizza_form
+  - active_loop: simple_pizza_form
+  - slot_was_set:
+    - requested_slot: pizza_size
+  - intent: stop_pizza
+  - action: action_deactivate_loop
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_reset_pizza_slots
+  - slot_was_set:
+    - pizza_type: null
+  - slot_was_set:
+    - pizza_size: null
+  - action: utter_stop_pizza
+
+- story: interactive_story_5
+  steps:
+  - intent: buy_pizza
+  - action: simple_pizza_form
+  - active_loop: simple_pizza_form
+  - slot_was_set:
+    - requested_slot: pizza_size
+  - slot_was_set:
+    - pizza_size: l
+  - slot_was_set:
+    - pizza_size: l
+  - slot_was_set:
+    - requested_slot: pizza_type
+  - intent: stop_pizza
+  - action: action_deactivate_loop
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_reset_pizza_slots
+  - slot_was_set:
+    - pizza_type: null
+  - slot_was_set:
+    - pizza_size: null
+  - action: utter_stop_pizza
+
+- story: exam1
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: wanna_explanation
+  - intent: affirm
+  - action: exam_form
+  - slot_was_set:
+    wanna_explanation: true
+
+- story: interactive_story_1
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: help
+  - action: utter_help
+  - intent: list_exam
+  - action: utter_list_exam

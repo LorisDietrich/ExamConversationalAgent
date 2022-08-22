@@ -1,0 +1,25 @@
+identifier,proposal-answer-text,question-text,answer-text,language,explication-text
+values1e,true*false,Is this correct: 28+9=37 ?,true,english,This is an addition
+values1f,vrai*faux,Est-ce correcte: 28+9=37 ?,vrai,francais,C'est est une addition
+values2e,true*false,Is this correct: 64-37=37 ?,false,english,This is a soustraction
+values2f,vrai*faux,Est-ce correcte: 64-37=37 ?,faux,francais,C'est une soustraction
+values3e,true*false,Is this correct: 6*7=42 ?,true,english,This is a multiplication
+values3f,vrai*faux,Est-ce correcte: 6*7=42 ?,vrai,francais,C'est une multiplication
+values4e,true*false,Is this correct: 24*3=7 ?,false,english,This is a multiplication
+values4f,vrai*faux,Est-ce correcte: 24*3=7 ?,faux,francais,C'est une multiplication
+values5e,true*false,Is this correct: 324+11=345 ?,false,english,This is an addition
+values5f,vrai*faux,Est-ce correcte: 324+11=345 ?,faux,francais,C'est est une addition
+values6e,true*false,Is this correct: 413-399=14 ?,true,english,This is a soustraction
+values6f,vrai*faux,Est-ce correcte: 413-399=14 ?,vrai,francais,C'est une soustraction
+values7e,true*false,Is this correct: 11*11 = 110 ?,false,english,This is a multiplication
+values7f,vrai*faux,Est-ce correcte: 11*11 = 110 ?,faux,francais,C'est une multiplication
+values8e,true*false,Is this correct: 130/5=22 ?,true,english,This is a division
+values8f,vrai*faux,Est-ce correcte: 130/5=22 ?,vrai,francais,C'est une division
+values9e,-36*4*14,What is the answer: 2+3*4-10 = ?,4,english,This is because of operation order
+values9f,-36*4*14,Quelle est la réponse: 2+3*4-10 = ?,4,francais,C'est en raison de la priorité des opérations
+values10e,4*6,What is the answer: 4*1+4/2 = ?,6,english,This is because of operation order
+values10f,4*6,Quelle est la réponse: 4*1+4/2 = ?,6,francais,C'est en raison de la priorité des opérations
+values11e,11*15*24*41,What is the answer: 8+3*4-3 = ?,15,english,This is because of operation order
+values11f,11*15*24*41,Quelle est la réponse: 8+3*4-3 = ?,15,francais,C'est en raison de la priorité des opérations
+values12e,2*3*4*5*6,What is the answer: 5x*3+6/3 = 63. x = ?,4,english,This is because of operation order
+values12f,2*3*4*5*6,Quelle est la réponse: 5x*3+6/3 = 63. x = ?,4,francais,C'est en raison de la priorité des opérations

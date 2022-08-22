@@ -1,0 +1,25 @@
+identifier,proposal-answer-text,question-text,answer-text,language,explication-text
+values1e,true*false,is Java and Javascript the same programming language ?,false,english,They are not the same programming language despite the fact that their name is similar
+values1f,vrai*faux,Est-ce que Java et Javascript sont le même langage de programmation ?,faux,francais,Ce ne sont pas le même language de programmation malgré le fait que leurs noms se ressemblent
+values2e,python*pycharm*vscode*sql*html,In this list which one is a programming language ?,python,english, Pycharm and VSCode are IDE / SQL is a Structured Query Language / HTML is a markup language
+values2f,python*pycharm*vscode*sql*html,Lequel dans la liste est un langage de programmation ?,python,francais, Pycharm et VSCode sont des IDE / SQL est un language de requête structurelle / HTML est un language de balisage
+values3e,variable*constant*function*pointer,Which one could have à different value during à program execution ?,variable,english,Please see the definition of each one
+values3f,variable*constante*fonction*pointeur,Lequel permet de stocker des valeures différentes durant l'éxécution d'un programme ?,variable,francais,Regardez s'il vous plait la définition de chacune des propositions
+values4e,variable*constant*function*pointer*class,Which one could only have one value during à program execution ?,constante,english,Please see the definition of each one
+values4f,variable*constante*fonction*pointeur*class,Lequel ne permet de stocker seulement une valeure durant l'éxécution d'un programme ?,constante,francais,Regardez s'il vous plait la définition de chacune des propositions
+values5e,variable*constant*function*pointer*class,Which one correpsond to a chunk of code that you could use over and over ?,function,english,Please see the definition of each one
+values5f,variable*constante*fonction*pointeur*class,Lequel correspond à un bout de code que vous pouvez utiliser plusieurs fois ?,fonction,francais,Regardez s'il vous plait la définition de chacune des propositions
+values6e,variable*constant*function*pointer*class,Which one create a template/description of an object ?,class,english,Please see the definition of all the convention
+values6f,variable*constante*fonction*pointeur*class,Lequel permet de créer un template d'object et de le décrire ?,class,francais,Regardez s'il vous plait la définition de chacune des propositions
+values7e,true*false,Are array and arrayBuffer mutable (both)?,true,english,Please see the definition of each one
+values7f,vrai*faux,Est-ce que les array et arrayBuffer sont mutables ?,vrai,francais,Regardez s'il vous plait la définition de chacune des propositions
+values8e,array*arrayBuffer,Wich one is resizable ?,arrayBuffer,english,Please see the definition of each one
+values8f,array*arrayBuffer,Lequel permet de modifier sa taille ?,arrayBuffer,francais,Regardez s'il vous plait la définition de chacune des propositions
+values9e,Pascal Case*Camel Case**Snak Case*Kebab Case,To which one correspond this variable's convention: TheVariable,Pascal Case,english,Please see the definition of all the convention
+values10e,Pascal Case*Camel Case**Snak Case*Kebab Case,To which one correspond this variable's convention: theVariable,Camel Case,english,Please see the definition of all the convention
+values11e,Pascal Case*Camel Case**Snak Case*Kebab Case,To which one correspond this variable's convention: the_variable,Snake Case,english,Please see the definition of all the convention
+values12e,Pascal Case*Camel Case**Snak Case*Kebab Case,To which one correspond this variable's convention: the-variable,Kebab Case,english,Please see the definition of all the convention
+values9f,Pascal Case*Camel Case**Snak Case*Kebab Case,A quelle convention correspond le style de la variable suivante: TheVariable,Pascal Case,francais,Regardez s'il vous plait la définition de chacune des conventions
+values10f,Pascal Case*Camel Case**Snak Case*Kebab Case,A quelle convention correspond le style de la variable suivante: theVariable,Camel Case,francais,Regardez s'il vous plait la définition de chacune des conventions
+values11f,Pascal Case*Camel Case**Snak Case*Kebab Case,A quelle convention correspond le style de la variable suivante: the_variable,Snake Case,francais,Regardez s'il vous plait la définition de chacune des conventions
+values12f,Pascal Case*Camel Case**Snak Case*Kebab Case,A quelle convention correspond le style de la variable suivante: the-variable,Kebab Case,francais,Regardez s'il vous plait la définition de chacune des conventions

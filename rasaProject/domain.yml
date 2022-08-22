@@ -1,0 +1,241 @@
+version: '3.1'
+intents:
+- affirm
+- bot_challenge
+- buy_fancy_pizza
+- buy_pizza
+- bye
+- deny
+- giving_exam_id
+- giving_id
+- giving_language
+- goodbye
+- greet
+- help
+- inform_pizza
+- inquire_time
+- inquire_time_difference
+- mood_great
+- mood_unhappy
+- out_of_scope
+- resolve_entity
+- stop_pizza
+- take_exam
+- testDB
+- true_false
+- where_i_live
+- list_exam
+- stop_exam
+- what_my_id
+- what_id_exam
+entities:
+- pizza_size
+- nameuser
+- place
+- pizza_type
+- vegetarian
+- mention
+- tf
+- id_student
+- language
+- exam_id
+slots:
+  nameuser:
+    type: any
+    mappings:
+    - type: from_entity
+      entity: nameuser
+  location:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: custom
+      action: action_time_difference
+  pizza_size:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: from_entity
+      entity: pizza_size
+  pizza_type:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: from_entity
+      entity: pizza_type
+  vegetarian:
+    type: bool
+    influence_conversation: true
+    mappings:
+    - type: from_intent
+      value: true
+      intent: affirm
+    - type: from_intent
+      value: false
+      intent: deny
+  tf:
+    type: bool
+    influence_conversation: true
+    mappings:
+    - type: from_intent
+      value: true
+      intent: affirm
+    - type: from_intent
+      value: false
+      intent: deny
+  language:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: from_entity
+      entity: language
+  id_student:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_entity
+      entity: id_student
+      conditions:
+      - active_loop: exam_form
+        requested_slot: id_student
+  id_exam:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: from_entity
+      entity: exam_id
+      conditions:
+      - active_loop: exam_form
+        requested_slot: id_exam
+  answer1:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: custom
+  answer2:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: custom
+  wanna_explanation:
+    type: bool
+    influence_conversation: true
+    mappings:
+    - type: custom
+forms:
+  simple_pizza_form:
+    required_slots:
+    - pizza_size
+    - pizza_type
+  fancy_pizza_form:
+    required_slots:
+    - vegetarian
+    - pizza_size
+    - pizza_type
+  exam_form:
+    required_slots:
+    - id_student
+    - id_exam
+    - language
+    - answer1
+    - answer2
+    - wanna_explanation
+responses:
+  utter_greet:
+  - text: Hi. I can give you some information about banks or I can give you some details about the accounts you own. What do you want to know?
+  - text: Hey {nameuser}! How are you?
+    buttons:
+    - title: great
+      payload: /mood_great
+    - title: bad
+      payload: /mood_bad
+  - text: Hello {nameuser} !
+  - text: Hi, how can I help ?
+  utter_cheer_up:
+  - text: 'Here is something to cheer you up:'
+    image: https://i.imgur.com/nGF1K8f.jpg
+  utter_did_that_help:
+  - text: Did that help you?
+  utter_happy:
+  - text: Great, carry on!
+  utter_goodbye:
+  - text: Bye
+  - text: Talk to you later!
+  - text: Bye.
+  utter_iamabot:
+  - text: I am a bot, powered by Rasa.
+  - text: I am a bot, created by Loris.
+  utter_submit_pizza:
+  - text: I will now order a pizza for you!
+  utter_pizza_slots:
+  - text: I will order a {pizza_size} {pizza_type} pizza.
+  utter_ask_continue_pizza:
+  - text: Are you sure you want to stop the form ?
+  utter_ask_pizza_size:
+  - text: What size would you like your pizza to be ?
+  utter_ask_pizza_type:
+  - text: What kind of pizza would you like to buy ?
+  utter_stop_pizza:
+  - text: Ok! Your Pizza's order is now cancelled.
+  utter_ok:
+  - text: Ok
+  utter_rephrase:
+  - text: Can you please rephrase?
+  - text: Sorry, I didn't get that. Can you rephrase?
+  utter_out_of_scope:
+  - text: Sorry, I cannot help you with that.
+  - text: I'm not able to help you with that.
+  utter_help:
+  - text: here's what i can do, list all exam available / start the exam / buy a simple or fancy pizza
+  utter_submit_exam:
+  - text: You can now close the window.
+  utter_list_exam:
+  - text: Here's the available exam; IALP / MATH1
+  utter_stop_exam:
+  - text: As you requested, the exam is now finished.
+  utter_what_my_id:
+  - text: Your id is the number on your student card.
+  utter_what_id_exam:
+  - text: The exam id is the id of your course you need/want to pass the exam. You ask me the list of all available exam.
+
+actions:
+- action_ask_answer1
+- action_ask_answer2
+- action_ask_id_exam
+- action_ask_id_student
+- action_ask_language
+- action_ask_pizza_type
+- action_ask_vegetarian
+- action_ask_wanna_explanation
+- action_compare_entities
+- action_remember_where_i_live
+- action_reset_exam_slots
+- action_reset_pizza_slots
+- action_resolve_entity
+- action_tell_time
+- action_testDB
+- action_time_difference
+- utter_ask_continue_pizza
+- utter_ask_pizza_size
+- utter_ask_pizza_type
+- utter_goodbye
+- utter_greet
+- utter_help
+- utter_list_exam
+- utter_ok
+- utter_out_of_scope
+- utter_pizza_slots
+- utter_rephrase
+- utter_stop_pizza
+- utter_submit_pizza
+- validate_exam_form
+- validate_fancy_pizza_form
+- validate_simple_pizza_form
+- utter_stop_exam
+- utter_submit_exam
+- utter_what_my_id
+- utter_what_id_exam
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

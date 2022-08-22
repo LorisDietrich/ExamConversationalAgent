@@ -1,0 +1,85 @@
+define
+
+# attribute
+
+id-values sub attribute,
+    value string;
+    
+id-category sub attribute,
+    value string;
+
+id-weight sub attribute,
+    value string;
+
+identifier sub attribute,
+    value string;
+    
+proposal-answer-text sub attribute,
+    value string;
+
+explication-text sub attribute,
+    value string;
+
+language sub attribute,
+    value string;
+
+question-text sub attribute,
+    value string;
+    
+answer-text sub attribute,
+    value string;
+    
+question-type sub attribute,
+    value string;
+    
+theme sub attribute,
+    value string;
+    
+point sub attribute,
+    value long;
+
+complexity sub attribute,
+    value long;
+
+importance sub attribute,
+    value long;
+
+# relationships
+
+question sub relation,
+    relates values,
+    relates category,
+    relates weight,
+    owns identifier @key,
+    owns id-values,
+    owns id-weight,
+    owns id-category;
+
+# entities
+
+
+weight sub entity,
+    plays question:weight,
+    owns identifier @key,
+    owns point,
+    owns complexity,
+    owns importance;
+    
+category sub entity,
+    plays question:category,
+    owns identifier @key,
+    owns theme,
+    owns question-type;
+    
+values sub entity,
+    plays question:values,
+    owns identifier @key,
+    owns proposal-answer-text,
+    owns question-text,
+    owns answer-text,
+    owns language,
+    owns explication-text;
+
+
+
+

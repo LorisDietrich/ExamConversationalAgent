@@ -1,0 +1,171 @@
+define
+
+# attribute
+
+mapping-key sub attribute,
+  value string;
+
+mapping-value sub attribute,
+  value string;
+
+execution-date sub attribute,
+  value datetime;
+
+created-date sub attribute,
+  value datetime;
+
+expiry-date sub attribute,
+  value datetime;
+
+sign-date sub attribute,
+  value datetime;
+
+opening-date sub attribute,
+  value datetime;
+
+email sub attribute,
+  value string;
+
+name sub attribute,
+  value string;
+
+first-name sub attribute,
+  value string;
+
+last-name sub attribute,
+  value string;
+
+city sub attribute,
+  value string;
+
+headquarters sub attribute,
+  value string;
+
+balance sub attribute,
+  value double;
+
+account-number sub attribute,
+  value string;
+
+account-type sub attribute,
+  value string;
+
+card-number sub attribute,
+  value long;
+
+amount sub attribute,
+  value double;
+
+reference sub attribute,
+  value string;
+
+category sub attribute,
+  value string;
+
+phone-number sub attribute,
+  value string;
+
+gender sub attribute,
+  value string;
+
+country sub attribute,
+  value string;
+
+allowed-residents sub attribute,
+  value string;
+
+free-accounts sub attribute,
+  value boolean;
+
+english-customer-service sub attribute,
+  value boolean;
+
+english-website sub attribute,
+  value boolean;
+
+english-mobile-app sub attribute,
+  value boolean;
+
+free-worldwide-withdrawals sub attribute,
+  value boolean;
+
+identifier sub attribute,
+  value long;
+
+name-on-card sub attribute,
+  value string;
+
+# relationships
+
+contract sub relation,
+  relates customer,
+  relates offer,
+  relates provider,
+  owns identifier @key,
+  owns sign-date;
+
+transaction sub relation,
+  relates account-of-receiver,
+  relates account-of-creator,
+  owns identifier @key,
+  owns amount,
+  owns reference,
+  owns category,
+  owns execution-date;
+
+represented-by sub relation,
+  relates bank-account,
+  relates bank-card,
+  owns identifier @key;
+
+# entities
+
+person sub entity,
+  plays contract:customer,
+  owns email @key,
+  owns first-name,
+  owns last-name,
+  owns city,
+  owns phone-number,
+  owns gender;
+
+bank sub entity,
+  plays contract:provider,
+  owns name @key,
+  owns country,
+  owns headquarters,
+  owns free-accounts,
+  owns english-customer-service,
+  owns english-website,
+  owns english-mobile-app,
+  owns free-worldwide-withdrawals,
+  owns allowed-residents;
+
+account sub entity,
+  plays represented-by:bank-account,
+  owns account-number @key,
+  owns opening-date,
+  owns balance,
+  owns account-type,
+  plays contract:offer,
+  plays transaction:account-of-receiver,
+  plays transaction:account-of-creator;
+
+card sub entity,
+  plays represented-by:bank-card,
+  owns card-number @key,
+  owns name-on-card,
+  owns expiry-date,
+  owns created-date;
+
+mapping sub entity,
+  owns mapping-key,
+  owns mapping-value;
+
+mention-mapping sub mapping;
+entity-type-mapping sub mapping;
+attribute-mapping sub mapping;
+
+
+
+

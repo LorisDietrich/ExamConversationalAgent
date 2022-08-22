@@ -1,0 +1,374 @@
+version: "3.1"
+nlu:
+- intent: greet
+  examples: |
+    - hey
+    - hello
+    - Hello, my name is [Juste](nameuser)
+    - Hi, my name is [Juste](nameuser)
+    - Hello there, my name is [Loris](nameuser)
+    - hi
+    - hello there
+    - good morning
+    - good evening
+    - moin
+    - hey there
+    - let's go
+    - hey dude
+    - goodmorning
+    - goodevening
+    - good afternoon
+- intent: goodbye
+  examples: |
+    - cu
+    - good by
+    - cee you later
+    - good night
+    - bye
+    - goodbye
+    - have a nice day
+    - see you around
+    - bye bye
+    - see you later
+- intent: affirm
+  examples: |
+    - yes
+    - y
+    - indeed
+    - of course
+    - that sounds good
+    - correct
+    - true
+    - it's true
+    - it is true
+    - it is correct
+    - the statement is true
+    - this is correct
+    - that is correct
+    - it's correct
+    - the statement is correct
+    - oui
+    - c'est juste
+    - juste
+    - vrai
+    - correcte
+    - c'est correct
+    - c'est complement juste
+    - bien sur
+    - bien sur que oui
+    - evidemment
+    - évidemment
+    - c'est vrai
+    - c'est completement vrai
+    - totalement vrai
+- intent: deny
+  examples: |
+    - no
+    - it is not correct
+    - it's not correct
+    - it is not true
+    - it's not true
+    - n
+    - never
+    - I don't think so
+    - don't like that
+    - no way
+    - not really
+    - this cannot be true
+    - this is false
+    - impossible
+    - the statement is false
+    - false
+    - that is not correct
+    - that is incorrect
+    - that can't be true
+    - non
+    - nope
+    - jamais
+    - c'est impossible
+    - c'est pas possible
+    - c'est pas juste
+    - c'est faux
+    - faux
+    - cela ne peut pas etre juste
+    - jamais de la vie
+    - je ne pense pas
+    - je pense vraiment pas
+- intent: mood_great
+  examples: |
+    - perfect
+    - great
+    - amazing
+    - feeling like a king
+    - wonderful
+    - I am feeling very good
+    - I am great
+    - I am amazing
+    - I am going to save the world
+    - super stoked
+    - extremely good
+    - so so perfect
+    - so good
+    - so perfect
+- intent: mood_unhappy
+  examples: |
+    - my day was horrible
+    - I am sad
+    - I don't feel very well
+    - I am disappointed
+    - super sad
+    - I'm so sad
+    - sad
+    - very sad
+    - unhappy
+    - not good
+    - not very good
+    - extremly sad
+    - so saad
+    - so sad
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you a human?
+    - am I talking to a bot?
+    - am I talking to a human?
+- intent: inquire_time
+  examples: |
+    - What time is it ?
+    - What time is it in [zagreb](place) ?
+    - What time is it in [amsterdam](place) ?
+    - Tell me the time in [amsterdam](place) ?
+    - What is the current time in [amsterdam](place) ?
+    - Tell me the current time in [london](place) ?
+    - What is the time in [amsterdam](place) ?
+    - What is the time in [Amsterdam](place) ?
+    - What time is it in [Zagreb](place) ?
+- intent: where_i_live
+  examples: |
+    - I live in [amsterdam](place)
+    - My home is in [london](place)
+    - Me and my family live in [gland](place)
+    - My residence is in [london](place)
+    - Please, remember i live in [amsterdam](place)
+    - For your information, I live in [london](place)
+- intent: inquire_time_difference
+  examples: |
+    - What is the time difference with [amsterdam](place) ?
+    - Is there a time difference with [london](place) ?
+    - Could you give me the time difference compared to [zageb](place) ?
+    - Could you give me the time difference with [zageb](place) ?
+- intent: buy_pizza
+  examples: |
+    - i'd like to buy a pizza
+    - i want a pizza
+    - can i buy a pizza
+    - I'm interested in a savory round flattened bread of Italian origin
+    - i want to buy a pizza
+- intent: inform_pizza
+  examples: |
+    - i'd like a [xl](pizza_size) pizza
+    - i want to order a [xl](pizza_size) [hawai](pizza_type) pizza
+    - [m](pizza_size) pizza
+    - [xl](pizza_size)
+    - [s](pizza_size) pizza
+    - [m](pizza_size)
+    - [pepperoni](pizza_type)
+    - give me a [mozarella](pizza_type) pizza
+    - [hawaii](pizza_type) pizza
+    - [hawaii](pizza_type)
+    - i want a [l](pizza_size) pizza
+    - [mozzarella](pizza_type)
+    - [hawai](pizza_type)
+    - [veggie](pizza_type)
+    - [fungi](pizza_type)
+    - [s](pizza_size)
+    - [l](pizza_size)
+- intent: stop_pizza
+  examples: |
+    - I want to stop buying a pizza
+    - I don't want to buy a pizza anymore
+    - i don't want to buy a pizza
+    - i'm not hungry anymore
+    - i don't want a pizza anymore
+    - i don't want to buy a pizza anymore
+- intent: buy_fancy_pizza
+  examples: |
+    - i'd like to buy a fancy pizza
+    - i want a fancy pizza
+    - can i buy a fancy pizza
+    - i want to buy a fancy pizza
+- intent: list_exam
+  examples: |
+    - could you please list me all the exams
+    - can you give me all available exam
+    - What is the open exam
+    - Which exam is available
+    - list me exam
+    - list me all exam
+    - Is there any exam
+    - list all exam
+- intent: help
+  examples: |
+    - What can you do?
+    - What should I ask you?
+    - how can you help me
+    - I need help
+    - help me
+    - I'm stuck
+    - i need help
+    - i don't know what to do
+
+- intent: stop_exam
+  examples: |
+    - I want to stop the exam
+    - stop exam
+    - could you stop the exam
+    - can we stop the assignement
+    - can we stop
+    - i want to finish the exam
+    - i want to leave the exam
+    - leave exam
+    - finish the exam like this
+
+- intent: out_of_scope
+  examples: |
+    - Can I transfer money?
+    - Can I open a bank account?
+    - Can you help me with transferring money?
+    - I want to open a bank account
+    - I need a new bank account
+    - i want to transfer money
+    - I want to transfer money
+    - can you name the owner of the account DE76894768662419673111
+    - do i also have an account on N26
+    - What are transactions I made to account DE51728838437501118370
+- intent: resolve_entity
+  examples: |
+    - [1](mention)
+    - [3](mention)
+    - [2](mention)
+    - [4](mention)
+    - [5](mention)
+    - [one](mention)
+    - [two](mention)
+    - [three](mention)
+    - [four](mention)
+    - [five](mention)
+    - [sox](mention)
+    - The [first](mention) one
+    - The [last](mention) one
+    - The [second](mention) one
+    - The [third](mention) one
+    - the [fourth](mention) one
+    - the [fifth](mention) one
+    - I meant the [first](mention) one
+    - Take the [last](mention) answer
+    - The [first](mention) nicole
+    - Take the [first](mention) one
+    - Take the [second](mention) one
+    - take the [first](mention)
+    - I select the [first](mention)
+    - The [latter](mention)
+    - take the [second](mention) one
+    - le [premier](mention)
+    - la [première](mention)
+    - la [premiere](mention)
+    - la [seconde](mention) réponse
+    - je veux la [deuxième](mention)
+    - la [troisième](mention) est la meilleure
+    - je pense que la [troisieme](mention) est la bonne
+    - la [quatrième](mention) me semble correcte
+    - la [cinquieme](mention) est juste
+    - la [dernière](mention) est juste
+    - la [derniere](mention)
+    - [un](mention)
+    - [une](mention)
+- intent: language
+  examples: |
+    - Java
+    - Javascript
+    - Scala
+    - html
+    - css
+- intent: testDB
+  examples: |
+    - list me all the [question](entity_type) in the typeDB database.
+    - could you list me all the [question](entity_type) in the typeDB database.
+    - can you list me all the questions ?
+    - What is all the questions ?
+
+- intent: what_my_id
+  examples: |
+    - What is my id ?
+    - What is my student id ?
+    - How can i find my id ?
+    - How do i find my id ?
+    - Where is my id ?
+    - Where is my student id ?
+
+- intent: what_id_exam
+  examples: |
+    - What is the exam id ?
+    - What is the exam student id ?
+    - How can i find the exam id ?
+    - How do i find the exam id ?
+    - Where is the exam id ?
+    - Where is the exam student id ?
+
+- intent: take_exam
+  examples: |
+    - i want to start the exam
+    - start exam
+    - start the exam
+    - could we start the test ?
+    - i want to begin the exam
+- intent: giving_id
+  examples: |
+    - here's my id [3852283](id_student)
+    - here is my id [0394829](id_student)
+    - my student id is [9385629](id_student)
+    - my student number is [8374912](id_student)
+    - this is my student id [1038483](id_student)
+    - [29381928](id_student)
+    - [98238293](id_student)
+    - my id is [921-201-12](id_student)
+    - it's [291-243-83](id_student)
+    - [103-104-12](id_student)
+    - [127-752-95](id_student)
+- intent: giving_language
+  examples: |
+    - my preference is [french](language)
+    - I want to pass it in [english](language)
+    - I would prefer to pass it in [french](language)
+    - [en](language)
+    - [fr](language)
+    - [french](language)
+    - [francais](language)
+    - [français](language)
+    - in [english](language)
+    - [eng](language)
+    - [english]
+    - my prefered language is [english](language)
+    - i want the language to be [french](language)
+- intent: giving_exam_id
+  examples: |
+    - my exam is [IALP](exam_id)
+    - [ILP](exam_id)
+    - the exam is [IALP](exam_id)
+    - the id of my exam is [MATH1](exam_id)
+    - [MATH1](exam_id)
+- regex: id_student
+  examples: |
+    - [0-9]{3}-[0-9]{3}-[0-9]{2}
+    - [0-9]{8}
+- lookup: place
+  examples: |
+    - zagreb
+    - london
+    - amsterdam
+    - brussels
+    - seattle
+    - lisbon
+- lookup: person
+  examples: |
+    - ./lookup_tables/person.txt

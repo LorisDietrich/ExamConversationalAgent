@@ -1,0 +1,174 @@
+version: "3.1"
+
+rules:
+
+- rule: help
+  steps:
+  - intent: help
+  - action: utter_help
+
+- rule: list all available exam
+  steps:
+  - intent: list_exam
+  - action: utter_list_exam
+
+- rule: Say goodbye anytime the user says goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+
+- rule: Say 'I am a bot' anytime the user challenges
+  steps:
+  - intent: bot_challenge
+  - action: utter_iamabot
+
+- rule: Tell the times
+  steps:
+  - intent: inquire_time
+  - action: action_tell_time
+
+- rule: Where I live
+  steps:
+    - intent: where_i_live
+    - action: action_remember_where_i_live
+
+- rule: Time difference
+  steps:
+    - intent: inquire_time_difference
+    - action: action_time_difference
+
+- rule: Activate Pizza Form
+  steps:
+    - intent: buy_pizza
+    - action: simple_pizza_form
+    - active_loop: simple_pizza_form
+
+- rule: Activate Exam Form
+  steps:
+    - intent: take_exam
+    - action: exam_form
+    - active_loop: exam_form
+
+- rule: Stop Exam form
+  condition:
+    - active_loop: exam_form
+  steps:
+    - intent: stop_exam
+    - action: action_deactivate_loop
+    - action: action_reset_exam_slots
+    - active_loop: null
+    - slot_was_set:
+      - requested_slot: null
+    - action: utter_stop_exam
+
+- rule: interruption bot challenge exam form
+  condition: 
+    - active_loop: exam_form
+  steps:
+    - intent: bot_challenge
+    - action: utter_iamabot
+    - action: exam_form
+    - active_loop: exam_form
+
+- rule: interruption bot help exam form
+  condition: 
+    - active_loop: exam_form
+  steps:
+    - intent: help
+    - action: utter_help
+    - action: exam_form
+    - active_loop: exam_form
+
+- rule: interruption bot list exam form
+  condition: 
+    - active_loop: exam_form
+  steps:
+    - intent: list_exam
+    - action: utter_list_exam
+    - action: exam_form
+    - active_loop: exam_form
+
+- rule: interruption bot exam id exam form
+  condition: 
+    - active_loop: exam_form
+  steps:
+    - intent: what_id_exam
+    - action: utter_what_id_exam
+    - action: exam_form
+    - active_loop: exam_form
+
+- rule: interruption bot student id exam form
+  condition: 
+    - active_loop: exam_form
+  steps:
+    - intent: what_my_id
+    - action: utter_what_my_id
+    - action: exam_form
+    - active_loop: exam_form
+
+- rule: Submit Exam form
+  condition:
+    - active_loop: exam_form
+  steps:
+    - action: exam_form
+    - active_loop: null
+    - slot_was_set:
+      - requested_slot: null
+    - action: utter_submit_exam
+    - action: action_reset_exam_slots
+
+- rule: Submit Pizza form
+  condition:
+    - active_loop: simple_pizza_form
+  steps:
+    - action: simple_pizza_form
+    - active_loop: null
+    - slot_was_set:
+      - requested_slot: null
+    - action: utter_submit_pizza
+    - action: utter_pizza_slots
+    - action: action_reset_pizza_slots
+
+- rule: Stop Pizza form
+  condition:
+    - active_loop: simple_pizza_form
+  steps:
+    - intent: stop_pizza
+    - action: action_deactivate_loop
+    - action: action_reset_pizza_slots
+    - active_loop: null
+    - slot_was_set:
+      - requested_slot: null
+    - action: utter_stop_pizza
+
+- rule: interruption bot challenge pizza form
+  condition: 
+    - active_loop: simple_pizza_form
+  steps:
+    - intent: bot_challenge
+    - action: utter_iamabot
+    - action: simple_pizza_form
+    - active_loop: simple_pizza_form
+
+- rule: Activate Fancy Pizza Form
+  steps:
+    - intent: buy_fancy_pizza
+    - action: fancy_pizza_form
+    - active_loop: fancy_pizza_form
+
+- rule: Submit Fancy Pizza form
+  condition:
+    - active_loop: fancy_pizza_form
+  steps:
+    - action: fancy_pizza_form
+    - active_loop: null
+    - slot_was_set:
+      - requested_slot: null
+    - action: utter_submit_pizza
+    - action: utter_pizza_slots
+    - action: action_reset_pizza_slots
+
+- rule: testDB
+  steps:
+    - intent: testDB
+    - action: action_testDB
