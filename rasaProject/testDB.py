@@ -17,6 +17,17 @@ slot_value = 'english'
 #if str(slot_value) in str(mappingLanguage.items()):
     #print('ok')
 
+def queryAllDatabase():
+    exams = []
+    with TypeDB.core_client("localhost:1729") as client:
+        tempExams = client.databases().all()
+        for exam in tempExams:
+                    exams.append(str(exam))
+                    print(exam)
+        return exams
+
+queryAllDatabase()
+
 def queryExplicationDB(questionNumber, langDim):
     with TypeDB.core_client("localhost:1729") as client:
         with client.session("IALP", SessionType.DATA) as session:
@@ -74,7 +85,6 @@ def queryProposalDB(questionNumber, lang, langDim):
                     print(res[0])
                 return res
 
-print(queryExplicationDB('2','f'))
 
 
 def test1():

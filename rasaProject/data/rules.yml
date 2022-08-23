@@ -10,7 +10,7 @@ rules:
 - rule: list all available exam
   steps:
   - intent: list_exam
-  - action: utter_list_exam
+  - action: action_list_exam
 
 - rule: Say goodbye anytime the user says goodbye
   steps:
@@ -84,7 +84,7 @@ rules:
     - active_loop: exam_form
   steps:
     - intent: list_exam
-    - action: utter_list_exam
+    - action: action_list_exam
     - action: exam_form
     - active_loop: exam_form
 

@@ -32,6 +32,8 @@ id_student = '0'
 language = 'english'
 languageDim = 'e'
 id_exam = ''
+exams = []
+
 
 
 
@@ -174,6 +176,10 @@ utterMultilanguage = {
     'eplanationAllCorrect': {
         'english': 'All your answers were correct',
         'francais': 'Toutes vos réponses étaient correctes'
+    },
+    'listExam': {
+        'english': "Here's the list of all available exam",
+        'francais': 'Voici la liste de tous les examens disponibles'
     }
 }
 
@@ -192,6 +198,29 @@ class ActionTestDB(Action):
                     for answer in answer_iterator:
                         bank = answer.get('i').get_value()
                         dispatcher.utter_message(text=f'{bank}')
+
+class classListExam(Action):
+    def name(self) -> Text:
+        return "action_list_exam"
+    def run(self, dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        dispatcher.utter_message(text=f"{utterMultilanguage['listExam'][language]}")
+
+        for exam in exams:
+            dispatcher.utter_message(text=f"{exam}")
+        
+
+def queryAllDatabase():
+    res = []
+    with TypeDB.core_client("localhost:1729") as client:
+        tempRes = client.databases().all()
+        for i in tempRes:
+                    res.append(str(i))
+        return res
+
+exams = queryAllDatabase()
 
 def queryExplicationDB(questionNumber, langDim):
     with TypeDB.core_client("localhost:1729") as client:
@@ -344,13 +373,15 @@ class ValidationExamForm(FormValidationAction):
         tracker: Tracker,
         domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
-        if slot_value != None:
+        if slot_value != None and str(slot_value).upper() in exams:
             global id_exam
             id_exam = slot_value
             dispatcher.utter_message(text=f'Thank you for giving your exam id: {slot_value}.')
             return { 'id_exam': slot_value }
         else:
-            dispatcher.utter_message(text=f'Your anser isnt recognized. Please refer your id with only the number.')
+            dispatcher.utter_message(text=f"Your anser isn't recognized. Please verify your the name of your exam.")
+            dispatcher.utter_message(text=f"If you are in trouble finding the correct id, you can ask me the list of all available exam.")
+
             return { 'id_exam': None }
 
     def validate_language(self, slot_value: any, dispatcher: CollectingDispatcher,
@@ -500,7 +531,7 @@ class ActionResetExamSlots(Action):
         domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         return [SlotSet('answer1',None), SlotSet('answer2',None)]
 
-class AskForSlotActionLanguage(Action):
+class AskForSlotActionIdExam(Action):
     def name(self) -> Text:
         return "action_ask_id_exam"
 
