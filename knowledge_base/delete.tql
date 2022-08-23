@@ -1,1 +1,2 @@
-match $x isa values, has identifier $i, has explication-text $q; {$i = "values2f";};get $q;
+match $x like "values[0-9"; get $x;
+

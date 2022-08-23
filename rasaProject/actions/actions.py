@@ -7,6 +7,7 @@
 
 # This is a simple example for a custom action which utters "Hello World!"
 
+from glob import glob
 import random
 from typing import Any, Text, Dict, List, Union
 import arrow
@@ -37,7 +38,10 @@ exams = []
 askedQuestions = []
 currentComplexity = 2
 currentTheme = ''
-
+currentQuestionNumber = 0
+nextQuestionNumber = 0
+nestedDataDict = {}
+lastAnswerResult = True
 instruction = {
     #en
     'TF': 'Please, answer this question with a true or false statement.',
@@ -199,7 +203,7 @@ def getRandomInList(listed):
 
 def queryAllValues():
     with TypeDB.core_client("localhost:1729") as client:
-        with client.session("IALP", SessionType.DATA) as session:
+        with client.session(id_exam, SessionType.DATA) as session:
             with session.transaction(TransactionType.READ) as read_transaction:
                 query = 'match $x isa values, has identifier $i; get $i;'
                 answer_iterator = read_transaction.query().match(query)
@@ -218,6 +222,66 @@ def randomQuestion():
         random = getOnlyNumberValues(getRandomInList(queryAllValues()))
     askedQuestions.append(str(random))
     return str(random)
+
+def getQuestionPerfectMatch():
+    res = []
+    for i in nestedDataDict:
+        if i not in askedQuestions:
+            if lastAnswerResult == True:
+                if nestedDataDict[i]['complexity'] >= currentComplexity and nestedDataDict[i]['theme'] == currentTheme:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+            elif lastAnswerResult == False:
+                if nestedDataDict[i]['complexity'] <= currentComplexity and nestedDataDict[i]['theme'] == currentTheme:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+    return res
+
+def getQuestionWorstMatch():
+    res = []
+    for i in nestedDataDict:
+        if i not in askedQuestions:
+            if lastAnswerResult == True:
+                if nestedDataDict[i]['complexity'] >= currentComplexity:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+            elif lastAnswerResult == False:
+                if nestedDataDict[i]['complexity'] <= currentComplexity:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+    return res
+
+def getBestMatch(arrayNestedDict):
+    tempForRandom = []
+    complex = None
+    for i in arrayNestedDict:
+        for y in i:
+            if complex == None:
+                complex = i[y]['complexity']
+                tempForRandom.append(i)
+            elif i[y]['complexity'] > complex:
+                tempForRandom = []
+                tempForRandom.append(i)
+                complex = i[y]['complexity']
+            elif i[y]['complexity'] == complex:
+                tempForRandom.append(i)
+    rand = random.randint(0, len(tempForRandom)-1)
+    return tempForRandom[rand]
+
+def getNextQuestionNumber():
+    perfectMatch = getQuestionPerfectMatch()
+    if perfectMatch == []:
+        print('starf')
+        perfectMatch = getQuestionWorstMatch()
+    if perfectMatch == []:
+        print('oula')
+        nextNumber = randomQuestion()
+        nextComplexity = queryQuestionComplexityDB(nextNumber, languageDim)
+        nextTheme = queryQuestionThemeDB(nextNumber, languageDim)
+        return nextNumber, nextComplexity, nextTheme
+    dictBestMatch = getBestMatch(perfectMatch)
+    for i in dictBestMatch:
+        return i, dictBestMatch[i]['complexity'], dictBestMatch[i]['theme']
 
 class ActionTestDB(Action):
     def name(self) -> Text:
@@ -350,8 +414,57 @@ def queryQuestionPointDB(questionNumber, langDim):
                     res = answer.get('q').get_value()
                     return int(res)
 
-def handleAnswerFromDynamicQuestion():
-    pass
+def queryQuestionComplexityDB(questionNumber, langDim):
+
+    weightID = queryQuestionNamePointDB(questionNumber, langDim)
+
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa weight, has identifier $i, has complexity $q; {$i = "'
+                query += f'{weightID}'
+                query += '";}; get $q;'
+                answer_iterator = read_transaction.query().match(query)
+                for answer in answer_iterator:
+                    res = answer.get('q').get_value()
+                    return int(res)
+
+def queryQuestionThemeDB(questionNumber, langDim):
+
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa category, has identifier $i, has theme $q; {$i = "category'
+                query += f'{questionNumber}{langDim}'
+                query += '";}; get $q;'
+                answer_iterator = read_transaction.query().match(query)
+                for answer in answer_iterator:
+                    res = answer.get('q').get_value()
+                    return res
+                
+
+def queryAllNumberDB(lang):
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa values, has identifier $q, has language $i; {$i = "'
+                query += f'{lang}'
+                query += '";}; get $q;'
+                print(query)
+                answer_iterator = read_transaction.query().match(query)
+                res = []
+                for answer in answer_iterator:
+                    temp = answer.get('q').get_value()
+                    res.append(''.join(filter(str.isdigit, temp)))
+                return res
+
+def createNestedDataDict(lang, langDim):
+    allNumber = queryAllNumberDB(lang)
+    for i in allNumber:
+        nestedDataDict[i] = {
+            'complexity': queryQuestionComplexityDB(i, langDim),
+            'theme': queryQuestionThemeDB(i, langDim)
+        }
 
 class ValidationExamForm(FormValidationAction):
     def name(self) -> Text:
@@ -527,6 +640,11 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'resolve_entity':
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
+            global lastAnswerResult
+            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                lastAnswerResult = True
+            else: 
+                lastAnswerResult = False
 
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
             answers[int(askedQuestions[-1])] = (str(answer))
@@ -553,7 +671,12 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'resolve_entity':
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
-            
+            global lastAnswerResult
+            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                lastAnswerResult = True
+            else: 
+                lastAnswerResult = False
+
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
             answers[int(askedQuestions[-1])] = (str(answer))
             now = datetime.now()
@@ -584,6 +707,12 @@ class ValidationExamForm(FormValidationAction):
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
             
+            global lastAnswerResult
+            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                lastAnswerResult = True
+            else: 
+                lastAnswerResult = False
+
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
             answers[int(askedQuestions[-1])] = (str(answer))
             now = datetime.now()
@@ -620,6 +749,12 @@ class ValidationExamForm(FormValidationAction):
             global ending_time
             ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
+            global lastAnswerResult
+            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                lastAnswerResult = True
+            else: 
+                lastAnswerResult = False
+
             return { 'answer4': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -644,6 +779,12 @@ class ValidationExamForm(FormValidationAction):
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
             
+            global lastAnswerResult
+            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                lastAnswerResult = True
+            else: 
+                lastAnswerResult = False
+
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
             answers[int(askedQuestions[-1])] = (str(answer))
             now = datetime.now()
@@ -757,11 +898,22 @@ class AskForSlotActionAnswer1(Action):
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
 
+        createNestedDataDict(language, languageDim)
+
         now = datetime.now()
         global starting_time
         starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
         questionNumber = randomQuestion()
+
+        global currentQuestionNumber
+        currentQuestionNumber = int(questionNumber)
+
+        global currentComplexity
+        currentComplexity = queryQuestionComplexityDB(questionNumber, languageDim)
+
+        global currentTheme
+        currentTheme = queryQuestionThemeDB(questionNumber, languageDim)
 
         global realAnswers
         realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
@@ -788,8 +940,14 @@ class AskForSlotActionAnswer2(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-
-        questionNumber = randomQuestion()
+        global nextQuestionNumber, currentComplexity, currentTheme
+        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+        currentTheme = nextTheme
+        currentComplexity = nextComplexity
+        questionNumber = nextQuestionNumber
+        global currentQuestionNumber
+        currentQuestionNumber = int(questionNumber)
+        #questionNumber = randomQuestion()
 
         global realAnswers
         realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
@@ -816,8 +974,14 @@ class AskForSlotActionAnswer3(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-
-        questionNumber = randomQuestion()
+        global nextQuestionNumber, currentComplexity, currentTheme
+        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+        currentTheme = nextTheme
+        currentComplexity = nextComplexity
+        questionNumber = nextQuestionNumber
+        global currentQuestionNumber
+        currentQuestionNumber = int(questionNumber)
+        #questionNumber = randomQuestion()
 
         global realAnswers
         realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
@@ -844,8 +1008,14 @@ class AskForSlotActionAnswer4(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-
-        questionNumber = randomQuestion()
+        global nextQuestionNumber, currentComplexity, currentTheme
+        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+        currentTheme = nextTheme
+        currentComplexity = nextComplexity
+        questionNumber = nextQuestionNumber
+        global currentQuestionNumber
+        currentQuestionNumber = int(questionNumber)
+        #questionNumber = randomQuestion()
 
         global realAnswers
         realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
@@ -872,8 +1042,14 @@ class AskForSlotActionAnswer5(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-
-        questionNumber = randomQuestion()
+        global nextQuestionNumber, currentComplexity, currentTheme
+        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+        currentTheme = nextTheme
+        currentComplexity = nextComplexity
+        questionNumber = nextQuestionNumber
+        global currentQuestionNumber
+        currentQuestionNumber = int(questionNumber)
+        #questionNumber = randomQuestion()
 
         global realAnswers
         realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))

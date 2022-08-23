@@ -1,5 +1,5 @@
 from typedb.client import *
-
+id_exam = 'IALP'
 studentAnswer = {1:'22', 2:'2'}
 
 for i in range(len(studentAnswer)):
@@ -11,6 +11,8 @@ mappingLanguage = {
 }
 
 slot_value = 'english'
+language = 'english'
+langDim = 'e'
 
 #print(mappingLanguage.items())
 
@@ -46,9 +48,6 @@ def queryAllValues():
 def getOnlyNumberValues(value):
     return ''.join(filter(str.isdigit, value))
     
-
-print(getOnlyNumberValues(getRandomInList(queryAllValues())))
-
 def queryExplicationDB(questionNumber, langDim):
     with TypeDB.core_client("localhost:1729") as client:
         with client.session("IALP", SessionType.DATA) as session:
@@ -64,32 +63,147 @@ def queryExplicationDB(questionNumber, langDim):
 
 def queryQuestionNamePointDB(questionNumber, langDim):
     with TypeDB.core_client("localhost:1729") as client:
-        with client.session("rasaExam", SessionType.DATA) as session:
+        with client.session(id_exam, SessionType.DATA) as session:
             with session.transaction(TransactionType.READ) as read_transaction:
                 query = 'match $x (values: $v,weight: $w,category: $c) isa question, has identifier $i, has id-weight $q; {$i = "question'
                 query += f'{questionNumber}{langDim}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 for answer in answer_iterator:
                     res = answer.get('q').get_value()
                     return str(res)
 
-def queryQuestionPointDB(questionNumber, langDim):
+def queryQuestionComplexityDB(questionNumber, langDim):
 
     weightID = queryQuestionNamePointDB(questionNumber, langDim)
 
     with TypeDB.core_client("localhost:1729") as client:
-        with client.session("rasaExam", SessionType.DATA) as session:
+        with client.session(id_exam, SessionType.DATA) as session:
             with session.transaction(TransactionType.READ) as read_transaction:
-                query = 'match $x isa weight, has identifier $i, has point $q; {$i = "'
+                query = 'match $x isa weight, has identifier $i, has complexity $q; {$i = "'
                 query += f'{weightID}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 for answer in answer_iterator:
                     res = answer.get('q').get_value()
                     return int(res)
+
+def queryQuestionThemeDB(questionNumber, langDim):
+
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa category, has identifier $i, has theme $q; {$i = "category'
+                query += f'{questionNumber}{langDim}'
+                query += '";}; get $q;'
+                answer_iterator = read_transaction.query().match(query)
+                for answer in answer_iterator:
+                    res = answer.get('q').get_value()
+                    return res
+
+def queryAllNumberDB(lang):
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa values, has identifier $q, has language $i; {$i = "'
+                query += f'{lang}'
+                query += '";}; get $q;'
+                print(query)
+                answer_iterator = read_transaction.query().match(query)
+                res = []
+                for answer in answer_iterator:
+                    temp = answer.get('q').get_value()
+                    res.append(''.join(filter(str.isdigit, temp)))
+                return res
+
+def randomQuestion():
+    random = getOnlyNumberValues(getRandomInList(queryAllValues()))
+    while random in askedQuestions:
+        random = getOnlyNumberValues(getRandomInList(queryAllValues()))
+    askedQuestions.append(str(random))
+    return str(random)
+
+nestedDataDict = {}
+
+def createNestedDataDict(lang, langDim):
+    allNumber = queryAllNumberDB(lang)
+    for i in allNumber:
+        nestedDataDict[i] = {
+            'complexity': queryQuestionComplexityDB(i, langDim),
+            'theme': queryQuestionThemeDB(i, langDim)
+        }
+
+createNestedDataDict('english', 'e')
+print(nestedDataDict)
+
+currentTheme = 'programming-language'
+currentComplexity = 2
+lastAnswerResult = True
+askedQuestions = ['3', '2', '1', '10', '11', '12', '9', '7', '8']
+
+def getQuestionPerfectMatch():
+    res = []
+    for i in nestedDataDict:
+        if i not in askedQuestions:
+            if lastAnswerResult == True:
+                if nestedDataDict[i]['complexity'] >= currentComplexity and nestedDataDict[i]['theme'] == currentTheme:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+            elif lastAnswerResult == False:
+                if nestedDataDict[i]['complexity'] <= currentComplexity and nestedDataDict[i]['theme'] == currentTheme:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+    return res
+
+def getQuestionWorstMatch():
+    res = []
+    for i in nestedDataDict:
+        if i not in askedQuestions:
+            if lastAnswerResult == True:
+                if nestedDataDict[i]['complexity'] >= currentComplexity:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+            elif lastAnswerResult == False:
+                if nestedDataDict[i]['complexity'] <= currentComplexity:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+    return res
+
+def getBestMatch(arrayNestedDict):
+    tempForRandom = []
+    complex = None
+    for i in arrayNestedDict:
+        for y in i:
+            if complex == None:
+                complex = i[y]['complexity']
+                tempForRandom.append(i)
+            elif i[y]['complexity'] > complex:
+                tempForRandom = []
+                tempForRandom.append(i)
+                complex = i[y]['complexity']
+            elif i[y]['complexity'] == complex:
+                tempForRandom.append(i)
+    rand = random.randint(0, len(tempForRandom)-1)
+    return tempForRandom[rand]
+
+def getNextQuestionNumber():
+    perfectMatch = getQuestionPerfectMatch()
+    if perfectMatch == []:
+        print('starf')
+        perfectMatch = getQuestionWorstMatch()
+    if perfectMatch == []:
+        print('oula')
+        nextNumber = randomQuestion()
+        nextComplexity = queryQuestionComplexityDB(nextNumber, langDim)
+        nextTheme = queryQuestionThemeDB(nextNumber, langDim)
+        return nextNumber, nextComplexity, nextTheme
+    dictBestMatch = getBestMatch(perfectMatch)
+    for i in dictBestMatch:
+        return i, dictBestMatch[i]['complexity'], dictBestMatch[i]['theme']
+        
+print(getNextQuestionNumber())
+
+#print(queryAllNumberDB('english'))
 
 def queryProposalDB(questionNumber, lang, langDim):
     with TypeDB.core_client("localhost:1729") as client:
@@ -107,30 +221,3 @@ def queryProposalDB(questionNumber, lang, langDim):
                 return res
 
 
-
-def test1():
-    with TypeDB.core_client("localhost:1729") as client:
-        with client.session("rasaExam", SessionType.DATA) as session:
-            with session.transaction(TransactionType.READ) as read_transaction:
-                query = 'match $x isa category, has identifier $i, has question-type $a; {$i = "category'
-                query += f'1'
-                query += '";}; get $a;'
-                print(query)
-                answer_iterator = read_transaction.query().match(query)
-                for answer in answer_iterator:
-                    res = answer.get('a').get_value()
-                    print(res)
-
-
-def test2():
-    with TypeDB.core_client("localhost:1729") as client:
-        with client.session("rasaExam", SessionType.DATA) as session:
-            with session.transaction(TransactionType.READ) as read_transaction:
-                answer_iterator = read_transaction.query().match("match $x isa question, has identifier $i; get $i;")
-
-                for answer in answer_iterator:
-                    #object_methods = [method_name for method_name in dir(object) if callable(getattr(object, method_name))]
-                    #print(object_methods)
-                    print(answer.get('i').get_value())
-                    print(vars(answer.get('i')))
-                    print(type(answer.get('i')))
