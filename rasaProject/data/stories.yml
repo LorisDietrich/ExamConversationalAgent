@@ -142,7 +142,7 @@ version: "3.1"
     - pizza_size: null
   - action: utter_stop_pizza
 
-- story: exam1
+- story: examExp
   steps:
   - active_loop: exam_form
   - slot_was_set:
@@ -151,6 +151,166 @@ version: "3.1"
   - action: exam_form
   - slot_was_set:
     wanna_explanation: true
+
+- story: examExp
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: wanna_explanation
+  - intent: deny
+  - action: exam_form
+  - slot_was_set:
+    wanna_explanation: true
+
+- story: exam1r
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer1
+  - intent: resolve_entity
+  - action: exam_form
+  - slot_was_set:
+    answer1: 'function'
+
+- story: exam2r
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer2
+  - intent: resolve_entity
+  - action: exam_form
+  - slot_was_set:
+    answer2: 'function'
+
+- story: exam3r
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer3
+  - intent: resolve_entity
+  - action: exam_form
+  - slot_was_set:
+    answer3: 'variable'
+
+- story: exam4r
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer4
+  - intent: resolve_entity
+  - action: exam_form
+  - slot_was_set:
+    answer4: 'class'
+
+- story: exam5r
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer5
+  - intent: resolve_entity
+  - action: exam_form
+  - slot_was_set:
+    answer5: '5'
+
+- story: exam1a
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer1
+  - intent: affirm
+  - action: exam_form
+  - slot_was_set:
+    answer1: true
+
+- story: exam2a
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer2
+  - intent: affirm
+  - action: exam_form
+  - slot_was_set:
+    answer2: true
+
+- story: exam3a
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer3
+  - intent: affirm
+  - action: exam_form
+  - slot_was_set:
+    answer3: true
+
+- story: exam4a
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer4
+  - intent: affirm
+  - action: exam_form
+  - slot_was_set:
+    answer4: true
+
+- story: exam5a
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer5
+  - intent: affirm
+  - action: exam_form
+  - slot_was_set:
+    answer5: true
+
+- story: exam1d
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer1
+  - intent: deny
+  - action: exam_form
+  - slot_was_set:
+    answer1: false
+
+- story: exam2d
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer2
+  - intent: deny
+  - action: exam_form
+  - slot_was_set:
+    answer2: false
+
+- story: exam3d
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer3
+  - intent: deny
+  - action: exam_form
+  - slot_was_set:
+    answer3: false
+
+- story: exam4d
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer4
+  - intent: deny
+  - action: exam_form
+  - slot_was_set:
+    answer4: false
+
+- story: exam5d
+  steps:
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: answer5
+  - intent: deny
+  - action: exam_form
+  - slot_was_set:
+    answer5: false
 
 - story: interactive_story_1
   steps:

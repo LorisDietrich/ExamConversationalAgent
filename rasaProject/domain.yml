@@ -117,6 +117,21 @@ slots:
     influence_conversation: true
     mappings:
     - type: custom
+  answer3:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: custom
+  answer4:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: custom
+  answer5:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: custom
   wanna_explanation:
     type: bool
     influence_conversation: true
@@ -139,17 +154,12 @@ forms:
     - language
     - answer1
     - answer2
+    - answer3
+    - answer4
+    - answer5
     - wanna_explanation
 responses:
   utter_greet:
-  - text: Hi. I can give you some information about banks or I can give you some details about the accounts you own. What do you want to know?
-  - text: Hey {nameuser}! How are you?
-    buttons:
-    - title: great
-      payload: /mood_great
-    - title: bad
-      payload: /mood_bad
-  - text: Hello {nameuser} !
   - text: Hi, how can I help ?
   utter_cheer_up:
   - text: 'Here is something to cheer you up:'
@@ -199,6 +209,9 @@ responses:
 actions:
 - action_ask_answer1
 - action_ask_answer2
+- action_ask_answer3
+- action_ask_answer4
+- action_ask_answer5
 - action_ask_id_exam
 - action_ask_id_student
 - action_ask_language

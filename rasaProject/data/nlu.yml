@@ -4,9 +4,6 @@ nlu:
   examples: |
     - hey
     - hello
-    - Hello, my name is [Juste](nameuser)
-    - Hi, my name is [Juste](nameuser)
-    - Hello there, my name is [Loris](nameuser)
     - hi
     - hello there
     - good morning
@@ -261,6 +258,12 @@ nlu:
     - The [third](mention) one
     - the [fourth](mention) one
     - the [fifth](mention) one
+    - The [first](mention)
+    - The [last](mention)
+    - The [second](mention)
+    - The [third](mention)
+    - the [fourth](mention)
+    - the [fifth](mention)
     - I meant the [first](mention) one
     - Take the [last](mention) answer
     - The [first](mention) nicole
@@ -300,6 +303,7 @@ nlu:
 - intent: what_my_id
   examples: |
     - What is my id ?
+    - what is my personnal id ?
     - What is my student id ?
     - How can i find my id ?
     - How do i find my id ?
@@ -308,6 +312,7 @@ nlu:
 
 - intent: what_id_exam
   examples: |
+    - what is my exam id ?
     - What is the exam id ?
     - What is the exam student id ?
     - How can i find the exam id ?

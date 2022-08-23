@@ -26,7 +26,28 @@ def queryAllDatabase():
                     print(exam)
         return exams
 
-queryAllDatabase()
+import random
+
+def getRandomInList(listed):
+    return listed[random.randint(0,(len(listed)-1))]
+
+def queryAllValues():
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session("IALP", SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa values, has identifier $i; get $i;'
+                answer_iterator = read_transaction.query().match(query)
+                res = []
+                for answer in answer_iterator:
+                    res.append(answer.get('i').get_value())
+                
+                return res
+
+def getOnlyNumberValues(value):
+    return ''.join(filter(str.isdigit, value))
+    
+
+print(getOnlyNumberValues(getRandomInList(queryAllValues())))
 
 def queryExplicationDB(questionNumber, langDim):
     with TypeDB.core_client("localhost:1729") as client:

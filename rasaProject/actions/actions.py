@@ -7,6 +7,7 @@
 
 # This is a simple example for a custom action which utters "Hello World!"
 
+import random
 from typing import Any, Text, Dict, List, Union
 import arrow
 import dateparser
@@ -33,63 +34,6 @@ language = 'english'
 languageDim = 'e'
 id_exam = ''
 exams = []
-
-
-
-
-def queryMySql(query):
-    # Connect to the database
-    connection = pymysql.connect(host='127.0.0.1',
-                             #port=8889,
-                             user='pma',
-                             #password='admin',
-                             database='examRasaBot',
-                             cursorclass=pymysql.cursors.DictCursor)
-    with connection:
-        with connection.cursor() as cursor:
-            # Create a new record
-            cursor.execute(query)
-
-        # connection is not autocommit by default. So you must commit to save
-        # your changes.
-        connection.commit()
-
-#https://note.nkmk.me/en/python-dict-get-key-from-value/
-def get_key_from_value(d, val):
-    keys = [k for k, v in d.items() if val in v]
-    if keys:
-        return keys[0]
-    return None
-
-#https://appdividend.com/2022/03/15/how-to-check-if-string-is-integer-in-python/#:~:text=To%20check%20if%20a%20string,string%20are%20digits%20or%20not.
-def checkInt(str):
-    try:
-        int(str)
-        return True
-    except ValueError:
-        return False
-
-def getGrade(studentAnswer, answer, langDim):
-    explication = {}
-    tempGrade = 0
-    totalPoint = 0
-    print(f'answer: {answer}')
-    for n in range(len(studentAnswer)):
-        point = queryQuestionPointDB((n+1), languageDim)
-        totalPoint += point
-        if str(studentAnswer[n+1]).lower() == str(answer[n+1]).lower():
-            tempGrade += point
-        else:
-            explication[n+1] = queryExplicationDB(str(n+1), langDim)
-        print(f'studentAnswer: {studentAnswer[n+1]}')
-        print(f'answer: {answer[n+1]}')
-        print(f'n: {n+1}')
-        print(f'point: {point}')
-        print(f'totalPoint: {totalPoint}')
-        print(f'tempGrade: {tempGrade}')
-    res = ((tempGrade/totalPoint)*5)+1
-    return res, explication
-
 askedQuestions = []
 currentComplexity = 2
 currentTheme = ''
@@ -182,6 +126,98 @@ utterMultilanguage = {
         'francais': 'Voici la liste de tous les examens disponibles'
     }
 }
+
+
+
+def queryMySql(query):
+    # Connect to the database
+    connection = pymysql.connect(host='127.0.0.1',
+                             #port=8889,
+                             user='pma',
+                             #password='admin',
+                             database='examRasaBot',
+                             cursorclass=pymysql.cursors.DictCursor)
+    with connection:
+        with connection.cursor() as cursor:
+            # Create a new record
+            cursor.execute(query)
+
+        # connection is not autocommit by default. So you must commit to save
+        # your changes.
+        connection.commit()
+
+#https://note.nkmk.me/en/python-dict-get-key-from-value/
+def get_key_from_value(d, val):
+    keys = [k for k, v in d.items() if val in v]
+    if keys:
+        return keys[0]
+    return None
+
+#https://appdividend.com/2022/03/15/how-to-check-if-string-is-integer-in-python/#:~:text=To%20check%20if%20a%20string,string%20are%20digits%20or%20not.
+def checkInt(str):
+    try:
+        int(str)
+        return True
+    except ValueError:
+        return False
+
+def getGrade(studentAnswer, answer, langDim):
+    explication = {}
+    tempGrade = 0
+    totalPoint = 0
+    print(f'answer: {answer}')
+    for n in studentAnswer:
+        point = queryQuestionPointDB(n, languageDim)
+        totalPoint += point
+        if str(studentAnswer[n]).lower() == str(answer[n]).lower():
+            tempGrade += point
+        else:
+            explication[n] = queryExplicationDB(str(n), langDim)
+            """
+    for n in range(len(studentAnswer)):
+        point = queryQuestionPointDB((n), languageDim)
+        totalPoint += point
+        if str(studentAnswer[n]).lower() == str(answer[n]).lower():
+            tempGrade += point
+        else:
+            explication[n+1] = queryExplicationDB(str(n+1), langDim)
+            """
+        print(f'studentAnswer: {studentAnswer[n]}')
+        print(f'answer: {answer[n]}')
+        print(f'n: {n}')
+        print(f'point: {point}')
+        print(f'totalPoint: {totalPoint}')
+        print(f'tempGrade: {tempGrade}')
+    res = ((tempGrade/totalPoint)*5)+1
+    return res, explication
+
+def getRandomInList(listed):
+    return listed[random.randint(0,(len(listed)-1))]
+
+def getRandomInList(listed):
+    return listed[random.randint(0,(len(listed)-1))]
+
+def queryAllValues():
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session("IALP", SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa values, has identifier $i; get $i;'
+                answer_iterator = read_transaction.query().match(query)
+                res = []
+                for answer in answer_iterator:
+                    res.append(answer.get('i').get_value())
+                
+                return res
+
+def getOnlyNumberValues(value):
+    return ''.join(filter(str.isdigit, value))
+
+def randomQuestion():
+    random = getOnlyNumberValues(getRandomInList(queryAllValues()))
+    while random in askedQuestions:
+        random = getOnlyNumberValues(getRandomInList(queryAllValues()))
+    askedQuestions.append(str(random))
+    return str(random)
 
 class ActionTestDB(Action):
     def name(self) -> Text:
@@ -353,6 +389,54 @@ class ValidationExamForm(FormValidationAction):
 
             return { 'answer2': tempSlot }
 
+    async def extract_answer3(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
+    ) -> Dict[Text, Any]:
+        if tracker.slots['requested_slot'] == 'answer3':
+            currentIntent = tracker.latest_message['intent'].get('name')
+
+            tempSlot = ''
+
+            if currentIntent == 'affirm':
+                tempSlot = True
+            elif currentIntent == 'deny':
+                tempSlot = False
+            elif currentIntent == 'resolve_entity':
+                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+
+            return { 'answer3': tempSlot }
+
+    async def extract_answer4(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
+    ) -> Dict[Text, Any]:
+        if tracker.slots['requested_slot'] == 'answer4':
+            currentIntent = tracker.latest_message['intent'].get('name')
+
+            tempSlot = ''
+
+            if currentIntent == 'affirm':
+                tempSlot = True
+            elif currentIntent == 'deny':
+                tempSlot = False
+            elif currentIntent == 'resolve_entity':
+                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+
+            return { 'answer4': tempSlot }
+
+    async def extract_answer5(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
+    ) -> Dict[Text, Any]:
+        if tracker.slots['requested_slot'] == 'answer5':
+            currentIntent = tracker.latest_message['intent'].get('name')
+
+            tempSlot = ''
+
+            if currentIntent == 'affirm':
+                tempSlot = True
+            elif currentIntent == 'deny':
+                tempSlot = False
+            elif currentIntent == 'resolve_entity':
+                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+
+            return { 'answer5': tempSlot }
+
     async def extract_wanna_explanation(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> Dict[Text, Any]:
         if tracker.slots['requested_slot'] == 'wanna_explanation':
@@ -430,7 +514,7 @@ class ValidationExamForm(FormValidationAction):
         domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         if slot_value != None:
-            proposal = queryProposalDB('2', language, languageDim)
+            proposal = queryProposalDB(askedQuestions[-1], language, languageDim)
             proposalArray = proposal[0].split('*')
 
             currentIntent = tracker.latest_message['intent'].get('name')
@@ -445,7 +529,7 @@ class ValidationExamForm(FormValidationAction):
                 answer = proposalArray[answerTemp-1]
 
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
-            answers[1] = (str(answer))
+            answers[int(askedQuestions[-1])] = (str(answer))
             return { 'answer1': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -456,7 +540,7 @@ class ValidationExamForm(FormValidationAction):
         domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         if slot_value != None:
-            proposal = queryProposalDB('2', language, languageDim)
+            proposal = queryProposalDB(askedQuestions[-1], language, languageDim)
             proposalArray = proposal[0].split('*')
 
             currentIntent = tracker.latest_message['intent'].get('name')
@@ -471,7 +555,7 @@ class ValidationExamForm(FormValidationAction):
                 answer = proposalArray[answerTemp-1]
             
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
-            answers[2] = (str(answer))
+            answers[int(askedQuestions[-1])] = (str(answer))
             now = datetime.now()
             global ending_time
             ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
@@ -480,6 +564,96 @@ class ValidationExamForm(FormValidationAction):
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
             return { 'answer2': None }
+
+    def validate_answer3(self, slot_value: any, dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        if slot_value != None:
+            proposal = queryProposalDB(askedQuestions[-1], language, languageDim)
+            proposalArray = proposal[0].split('*')
+
+            currentIntent = tracker.latest_message['intent'].get('name')
+            answerTemp = ''
+            answer = ''
+            if currentIntent == 'affirm':
+                answer = mappingTF[language][str(slot_value)]
+            elif currentIntent == 'deny':
+                answer = mappingTF[language][str(slot_value)]
+            elif currentIntent == 'resolve_entity':
+                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                answer = proposalArray[answerTemp-1]
+            
+            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
+            answers[int(askedQuestions[-1])] = (str(answer))
+            now = datetime.now()
+            global ending_time
+            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
+
+            return { 'answer3': answer }
+        else:
+            dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
+            return { 'answer3': None }
+
+    def validate_answer4(self, slot_value: any, dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        if slot_value != None:
+            proposal = queryProposalDB(askedQuestions[-1], language, languageDim)
+            proposalArray = proposal[0].split('*')
+
+            currentIntent = tracker.latest_message['intent'].get('name')
+            answerTemp = ''
+            answer = ''
+            if currentIntent == 'affirm':
+                answer = mappingTF[language][str(slot_value)]
+            elif currentIntent == 'deny':
+                answer = mappingTF[language][str(slot_value)]
+            elif currentIntent == 'resolve_entity':
+                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                answer = proposalArray[answerTemp-1]
+            
+            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
+            answers[int(askedQuestions[-1])] = (str(answer))
+            now = datetime.now()
+            global ending_time
+            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
+
+            return { 'answer4': answer }
+        else:
+            dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
+            return { 'answer4': None }
+
+    def validate_answer5(self, slot_value: any, dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        if slot_value != None:
+            proposal = queryProposalDB(askedQuestions[-1], language, languageDim)
+            proposalArray = proposal[0].split('*')
+
+            currentIntent = tracker.latest_message['intent'].get('name')
+            answerTemp = ''
+            answer = ''
+            if currentIntent == 'affirm':
+                answer = mappingTF[language][str(slot_value)]
+            elif currentIntent == 'deny':
+                answer = mappingTF[language][str(slot_value)]
+            elif currentIntent == 'resolve_entity':
+                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                answer = proposalArray[answerTemp-1]
+            
+            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
+            answers[int(askedQuestions[-1])] = (str(answer))
+            now = datetime.now()
+            global ending_time
+            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
+
+            return { 'answer5': answer }
+        else:
+            dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
+            return { 'answer5': None }
 
     def validate_wanna_explanation(self, slot_value: any, dispatcher: CollectingDispatcher,
         tracker: Tracker,
@@ -502,10 +676,10 @@ class ValidationExamForm(FormValidationAction):
             tempsAnswerFormated = []
             tempsRealAnswerFormated = []
             tempsIdQuestions  = []
-            for n in range(len(answers)):
-                tempsAnswerFormated.append(answers[n+1])
-                tempsRealAnswerFormated.append(realAnswers[n+1])
-                tempsIdQuestions.append(idQuestions[n+1])
+            for n in answers:
+                tempsAnswerFormated.append(answers[n])
+                tempsRealAnswerFormated.append(realAnswers[n])
+                tempsIdQuestions.append(idQuestions[n])
             answersFormated = '*'.join(tempsAnswerFormated)
             realAnswerFormated = '*'.join(tempsRealAnswerFormated)
             idQuestionsFormated = '*'.join(tempsIdQuestions)
@@ -587,11 +761,13 @@ class AskForSlotActionAnswer1(Action):
         global starting_time
         starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
-        global realAnswers
-        realAnswers[1] = (queryAnswerDB('1', language, languageDim))
+        questionNumber = randomQuestion()
 
-        question = queryQuestionDB('1', language, languageDim)
-        proposal = queryProposalDB('1', language, languageDim)
+        global realAnswers
+        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+
+        question = queryQuestionDB(questionNumber, language, languageDim)
+        proposal = queryProposalDB(questionNumber, language, languageDim)
         proposalList = proposal[0].split('*')
         
         dispatcher.utter_message(text=f"{question}")
@@ -600,8 +776,8 @@ class AskForSlotActionAnswer1(Action):
             count += 1
             dispatcher.utter_message(text=f'{count}: {answerProposal}')
         
-        questionType = queryQuestionTypeDB('1', languageDim)
-        idQuestions[1] = f'1{languageDim}'
+        questionType = queryQuestionTypeDB(questionNumber, languageDim)
+        idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
         dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
         return []
 
@@ -613,21 +789,107 @@ class AskForSlotActionAnswer2(Action):
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
 
+        questionNumber = randomQuestion()
+
         global realAnswers
-        realAnswers[2] = (queryAnswerDB('2', language, languageDim))
+        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
 
-        question = queryQuestionDB('2', language, languageDim)
-        proposal = queryProposalDB('2', language, languageDim)
+        question = queryQuestionDB(questionNumber, language, languageDim)
+        proposal = queryProposalDB(questionNumber, language, languageDim)
         proposalList = proposal[0].split('*')
-
+        
         dispatcher.utter_message(text=f"{question}")
         count = 0
         for answerProposal in proposalList:
             count += 1
             dispatcher.utter_message(text=f'{count}: {answerProposal}')
         
-        questionType = queryQuestionTypeDB('2', languageDim)
-        idQuestions[2] = f'2{languageDim}'
+        questionType = queryQuestionTypeDB(questionNumber, languageDim)
+        idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
+        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        return []
+
+class AskForSlotActionAnswer3(Action):
+    def name(self) -> Text:
+        return "action_ask_answer3"
+
+    def run(
+        self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
+    ) -> List[EventType]:
+
+        questionNumber = randomQuestion()
+
+        global realAnswers
+        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+
+        question = queryQuestionDB(questionNumber, language, languageDim)
+        proposal = queryProposalDB(questionNumber, language, languageDim)
+        proposalList = proposal[0].split('*')
+        
+        dispatcher.utter_message(text=f"{question}")
+        count = 0
+        for answerProposal in proposalList:
+            count += 1
+            dispatcher.utter_message(text=f'{count}: {answerProposal}')
+        
+        questionType = queryQuestionTypeDB(questionNumber, languageDim)
+        idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
+        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        return []
+
+class AskForSlotActionAnswer4(Action):
+    def name(self) -> Text:
+        return "action_ask_answer4"
+
+    def run(
+        self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
+    ) -> List[EventType]:
+
+        questionNumber = randomQuestion()
+
+        global realAnswers
+        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+
+        question = queryQuestionDB(questionNumber, language, languageDim)
+        proposal = queryProposalDB(questionNumber, language, languageDim)
+        proposalList = proposal[0].split('*')
+        
+        dispatcher.utter_message(text=f"{question}")
+        count = 0
+        for answerProposal in proposalList:
+            count += 1
+            dispatcher.utter_message(text=f'{count}: {answerProposal}')
+        
+        questionType = queryQuestionTypeDB(questionNumber, languageDim)
+        idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
+        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        return []
+
+class AskForSlotActionAnswer5(Action):
+    def name(self) -> Text:
+        return "action_ask_answer5"
+
+    def run(
+        self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
+    ) -> List[EventType]:
+
+        questionNumber = randomQuestion()
+
+        global realAnswers
+        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+
+        question = queryQuestionDB(questionNumber, language, languageDim)
+        proposal = queryProposalDB(questionNumber, language, languageDim)
+        proposalList = proposal[0].split('*')
+        
+        dispatcher.utter_message(text=f"{question}")
+        count = 0
+        for answerProposal in proposalList:
+            count += 1
+            dispatcher.utter_message(text=f'{count}: {answerProposal}')
+        
+        questionType = queryQuestionTypeDB(questionNumber, languageDim)
+        idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
         dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
         return []
 
