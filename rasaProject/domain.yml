@@ -203,6 +203,7 @@ responses:
   - text: As you requested, the exam is now finished.
   utter_what_my_id:
   - text: Your id is the number on your student card.
+    image: https://www.bu.edu/geneva/files/2016/07/UNIGE-card.jpg
   utter_what_id_exam:
   - text: The exam id is the individual code of your course. You ask me the list of all available exam.
 
