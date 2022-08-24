@@ -2,6 +2,7 @@ from typedb.client import *
 id_exam = 'IALP'
 studentAnswer = {1:'22', 2:'2'}
 
+
 for i in range(len(studentAnswer)):
     #print(len(studentAnswer))
     pass
@@ -55,7 +56,6 @@ def queryExplicationDB(questionNumber, langDim):
                 query = 'match $x isa values, has identifier $i, has explication-text $q; {$i = "values'
                 query += f'{questionNumber}{langDim}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 for answer in answer_iterator:
                     res = answer.get('q').get_value()
@@ -108,7 +108,6 @@ def queryAllNumberDB(lang):
                 query = 'match $x isa values, has identifier $q, has language $i; {$i = "'
                 query += f'{lang}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 res = []
                 for answer in answer_iterator:
@@ -134,7 +133,7 @@ def createNestedDataDict(lang, langDim):
         }
 
 createNestedDataDict('english', 'e')
-print(nestedDataDict)
+#print(nestedDataDict)
 
 currentTheme = 'programming-language'
 currentComplexity = 2
@@ -189,10 +188,8 @@ def getBestMatch(arrayNestedDict):
 def getNextQuestionNumber():
     perfectMatch = getQuestionPerfectMatch()
     if perfectMatch == []:
-        print('starf')
         perfectMatch = getQuestionWorstMatch()
     if perfectMatch == []:
-        print('oula')
         nextNumber = randomQuestion()
         nextComplexity = queryQuestionComplexityDB(nextNumber, langDim)
         nextTheme = queryQuestionThemeDB(nextNumber, langDim)
@@ -201,7 +198,7 @@ def getNextQuestionNumber():
     for i in dictBestMatch:
         return i, dictBestMatch[i]['complexity'], dictBestMatch[i]['theme']
         
-print(getNextQuestionNumber())
+#print(getNextQuestionNumber())
 
 #print(queryAllNumberDB('english'))
 
@@ -212,12 +209,25 @@ def queryProposalDB(questionNumber, lang, langDim):
                 query = 'match $x (values: $v,weight: $w,category: $c) isa question, has identifier $i, has id-weight $q; {$i = "question'
                 query += f'{questionNumber}{langDim}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 res = []
                 for answer in answer_iterator:
                     res.append(answer.get('q').get_value())
-                    print(res[0])
                 return res
 
+def queryImagesDB(questionNumber, langDim):
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa values, has identifier $i, has images $q; {$i = "values'
+                query += f'{questionNumber}{langDim}'
+                query += '";}; get $q;'
+                answer_iterator = read_transaction.query().match(query)
+                for answer in answer_iterator:
+                    res = answer.get('q').get_value()
+                    return str(res)
 
+questionNumber = '18'
+languageDim = 'f'
+#print(queryQuestionThemeDB(questionNumber, languageDim))
+print(queryImagesDB(questionNumber, languageDim))

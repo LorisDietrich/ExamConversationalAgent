@@ -214,7 +214,6 @@ nlu:
     - I'm stuck
     - i need help
     - i don't know what to do
-
 - intent: stop_exam
   examples: |
     - I want to stop the exam
@@ -226,7 +225,21 @@ nlu:
     - i want to leave the exam
     - leave exam
     - finish the exam like this
-
+    - i want to stop the exam
+    - stop the exam
+- intent: skip_exam
+  examples: |
+    - I want to skip
+    - i want to skip this question
+    - could you skip
+    - could you skip this question
+    - Can I skip the question
+    - can i skip
+    - skip this
+    - i don't want to answer
+    - i can't answer
+    - skip question
+    - can you skip this question ?
 - intent: out_of_scope
   examples: |
     - Can I transfer money?
@@ -299,7 +312,6 @@ nlu:
     - could you list me all the [question](entity_type) in the typeDB database.
     - can you list me all the questions ?
     - What is all the questions ?
-
 - intent: what_my_id
   examples: |
     - What is my id ?
@@ -309,7 +321,6 @@ nlu:
     - How do i find my id ?
     - Where is my id ?
     - Where is my student id ?
-
 - intent: what_id_exam
   examples: |
     - what is my exam id ?
@@ -319,7 +330,6 @@ nlu:
     - How do i find the exam id ?
     - Where is the exam id ?
     - Where is the exam student id ?
-
 - intent: take_exam
   examples: |
     - i want to start the exam
@@ -340,6 +350,8 @@ nlu:
     - it's [291-243-83](id_student)
     - [103-104-12](id_student)
     - [127-752-95](id_student)
+    - [39283928](id_student)
+    - [29383928](id_student)
 - intent: giving_language
   examples: |
     - my preference is [french](language)
@@ -355,6 +367,7 @@ nlu:
     - [english]
     - my prefered language is [english](language)
     - i want the language to be [french](language)
+    - [english](language)
 - intent: giving_exam_id
   examples: |
     - my exam is [IALP](exam_id)
@@ -362,12 +375,13 @@ nlu:
     - the exam is [IALP](exam_id)
     - the id of my exam is [MATH1](exam_id)
     - [MATH1](exam_id)
+    - [IALP](exam_id)
 - regex: id_student
   examples: |
-    - [0-9]{3}-[0-9]{3}-[0-9]{2}
-    - [0-9]{8}
     - [0-9]{2}-[0-9]{3}-[0-9]{3}
     - [0-9]{3}-[0-9]{2}-[0-9]{3}
+    - [0-9]{3}-[0-9]{3}-[0-9]{2}
+    - [0-9]{8}
 - lookup: place
   examples: |
     - zagreb

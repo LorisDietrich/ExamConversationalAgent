@@ -31,6 +31,7 @@ def values_template(values):
     graql_insert_query += ', has answer-text "' + values["answer-text"] + '"'
     graql_insert_query += ', has language "' + values["language"] + '"'
     graql_insert_query += ', has explication-text "' + values["explication-text"] + '"'
+    graql_insert_query += ', has images "' + values["images"] + '"'
     graql_insert_query += ";"
     return graql_insert_query
 

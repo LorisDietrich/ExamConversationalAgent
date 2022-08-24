@@ -320,3 +320,90 @@ version: "3.1"
   - action: utter_help
   - intent: list_exam
   - action: utter_list_exam
+
+- story: interactive_story_1
+  steps:
+  - intent: take_exam
+  - action: exam_form
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: id_student
+  - slot_was_set:
+    - id_student: '39283928'
+  - slot_was_set:
+    - id_student: '39283928'
+  - slot_was_set:
+    - requested_slot: id_exam
+  - intent: stop_exam
+  - action: action_deactivate_loop
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_reset_exam_slots
+  - slot_was_set:
+    - answer1: null
+  - slot_was_set:
+    - answer2: null
+  - slot_was_set:
+    - answer3: null
+  - slot_was_set:
+    - answer4: null
+  - slot_was_set:
+    - answer5: null
+  - action: utter_stop_exam
+
+- story: stop exam 2
+  steps:
+  - active_loop: exam_form
+  - intent: stop_exam
+  - action: action_deactivate_loop
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_reset_exam_slots
+  - slot_was_set:
+    - answer1: null
+  - slot_was_set:
+    - answer2: null
+  - slot_was_set:
+    - answer3: null
+  - slot_was_set:
+    - answer4: null
+  - slot_was_set:
+    - answer5: null
+  - action: utter_stop_exam
+
+- story: interactive_story_1
+  steps:
+  - intent: take_exam
+  - action: exam_form
+  - active_loop: exam_form
+  - slot_was_set:
+    - requested_slot: id_student
+  - slot_was_set:
+    - id_student: '29383928'
+  - slot_was_set:
+    - id_student: '29383928'
+  - slot_was_set:
+    - requested_slot: id_exam
+  - slot_was_set:
+    - id_exam: IALP
+  - slot_was_set:
+    - id_exam: IALP
+  - slot_was_set:
+    - requested_slot: language
+  - slot_was_set:
+    - language: english
+  - slot_was_set:
+    - language: english
+  - slot_was_set:
+    - requested_slot: answer1
+  - intent: skip_exam
+  - action: action_skip_exam
+  - slot_was_set:
+    - answer1: Na
+  - action: exam_form
+  - slot_was_set:
+    - answer1: 'Na'
+  - slot_was_set:
+    - requested_slot: answer2

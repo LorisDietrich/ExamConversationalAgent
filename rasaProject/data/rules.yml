@@ -67,6 +67,15 @@ rules:
       - requested_slot: null
     - action: utter_stop_exam
 
+- rule: Skip a question in exam form
+  condition:
+    - active_loop: exam_form
+  steps:
+    - intent: skip_exam
+    - action: action_skip_exam
+    - action: exam_form
+    - active_loop: exam_form
+
 - rule: interruption bot challenge exam form
   condition: 
     - active_loop: exam_form

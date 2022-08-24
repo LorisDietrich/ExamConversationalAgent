@@ -220,14 +220,15 @@ def randomQuestion():
     random = getOnlyNumberValues(getRandomInList(queryAllValues()))
     while random in askedQuestions:
         random = getOnlyNumberValues(getRandomInList(queryAllValues()))
-    askedQuestions.append(str(random))
     return str(random)
 
 def getQuestionPerfectMatch():
+    print(nestedDataDict)
     res = []
     for i in nestedDataDict:
-        if i not in askedQuestions:
+        if str(i) not in askedQuestions:
             if lastAnswerResult == True:
+                print(i)
                 if nestedDataDict[i]['complexity'] >= currentComplexity and nestedDataDict[i]['theme'] == currentTheme:
                     tempDict = {i: nestedDataDict[i]}
                     res.append(tempDict)
@@ -240,7 +241,7 @@ def getQuestionPerfectMatch():
 def getQuestionWorstMatch():
     res = []
     for i in nestedDataDict:
-        if i not in askedQuestions:
+        if str(i) not in askedQuestions:
             if lastAnswerResult == True:
                 if nestedDataDict[i]['complexity'] >= currentComplexity:
                     tempDict = {i: nestedDataDict[i]}
@@ -254,27 +255,40 @@ def getQuestionWorstMatch():
 def getBestMatch(arrayNestedDict):
     tempForRandom = []
     complex = None
-    for i in arrayNestedDict:
-        for y in i:
-            if complex == None:
-                complex = i[y]['complexity']
-                tempForRandom.append(i)
-            elif i[y]['complexity'] > complex:
-                tempForRandom = []
-                tempForRandom.append(i)
-                complex = i[y]['complexity']
-            elif i[y]['complexity'] == complex:
-                tempForRandom.append(i)
+    if lastAnswerResult == True:
+        for i in arrayNestedDict:
+            for y in i:
+                if complex == None:
+                    complex = i[y]['complexity']
+                    tempForRandom.append(i)
+                elif i[y]['complexity'] > complex:
+                    tempForRandom = []
+                    tempForRandom.append(i)
+                    complex = i[y]['complexity']
+                elif i[y]['complexity'] == complex:
+                    tempForRandom.append(i)
+    else:
+        for i in arrayNestedDict:
+            for y in i:
+                if complex == None:
+                    complex = i[y]['complexity']
+                    tempForRandom.append(i)
+                elif i[y]['complexity'] < complex:
+                    tempForRandom = []
+                    tempForRandom.append(i)
+                    complex = i[y]['complexity']
+                elif i[y]['complexity'] == complex:
+                    tempForRandom.append(i)
     rand = random.randint(0, len(tempForRandom)-1)
     return tempForRandom[rand]
 
 def getNextQuestionNumber():
     perfectMatch = getQuestionPerfectMatch()
     if perfectMatch == []:
-        print('starf')
+        print('not perfect --> worst')
         perfectMatch = getQuestionWorstMatch()
     if perfectMatch == []:
-        print('oula')
+        print('not worst --> random')
         nextNumber = randomQuestion()
         nextComplexity = queryQuestionComplexityDB(nextNumber, languageDim)
         nextTheme = queryQuestionThemeDB(nextNumber, languageDim)
@@ -413,6 +427,18 @@ def queryQuestionPointDB(questionNumber, langDim):
                 for answer in answer_iterator:
                     res = answer.get('q').get_value()
                     return int(res)
+
+def queryImagesDB(questionNumber, langDim):
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa values, has identifier $i, has images $q; {$i = "values'
+                query += f'{questionNumber}{langDim}'
+                query += '";}; get $q;'
+                answer_iterator = read_transaction.query().match(query)
+                for answer in answer_iterator:
+                    res = answer.get('q').get_value()
+                    return str(res)
 
 def queryQuestionComplexityDB(questionNumber, langDim):
 
@@ -640,6 +666,8 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'resolve_entity':
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
+            elif currentIntent == 'skip_exam':
+                answer = 'Na'
             global lastAnswerResult
             if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
                 lastAnswerResult = True
@@ -671,6 +699,8 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'resolve_entity':
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
+            elif currentIntent == 'skip_exam':
+                answer = 'Na'
             global lastAnswerResult
             if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
                 lastAnswerResult = True
@@ -679,9 +709,7 @@ class ValidationExamForm(FormValidationAction):
 
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
             answers[int(askedQuestions[-1])] = (str(answer))
-            now = datetime.now()
-            global ending_time
-            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
+            
 
             return { 'answer2': answer }
         else:
@@ -706,7 +734,8 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'resolve_entity':
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
-            
+            elif currentIntent == 'skip_exam':
+                answer = 'Na'
             global lastAnswerResult
             if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
                 lastAnswerResult = True
@@ -715,9 +744,6 @@ class ValidationExamForm(FormValidationAction):
 
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
             answers[int(askedQuestions[-1])] = (str(answer))
-            now = datetime.now()
-            global ending_time
-            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
             return { 'answer3': answer }
         else:
@@ -742,12 +768,10 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'resolve_entity':
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
-            
+            elif currentIntent == 'skip_exam':
+                answer = 'Na'
             dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
             answers[int(askedQuestions[-1])] = (str(answer))
-            now = datetime.now()
-            global ending_time
-            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
             global lastAnswerResult
             if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
@@ -778,7 +802,8 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'resolve_entity':
                 answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                 answer = proposalArray[answerTemp-1]
-            
+            elif currentIntent == 'skip_exam':
+                answer = 'Na'
             global lastAnswerResult
             if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
                 lastAnswerResult = True
@@ -808,6 +833,9 @@ class ValidationExamForm(FormValidationAction):
 
                 for i in explication:
                     dispatcher.utter_message(text=f"{utterMultilanguage['eplanationQuestion'][language]}: {queryQuestionDB(i, language, languageDim)}")
+                    img = queryImagesDB(str(i), languageDim)
+                    if img != '' and img != None:
+                        dispatcher.utter_image_url(img)
                     dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAnswer'][language]}: {answers[i]}, {utterMultilanguage['eplanationRealAnswer'][language]} {realAnswers[i]}.")
                     dispatcher.utter_message(text=f"{utterMultilanguage['eplanationExplanation'][language]}: {explication[i]}")
             elif slot_value == True and explication == {}:
@@ -836,6 +864,25 @@ class ValidationExamForm(FormValidationAction):
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
             return { 'wanna_explanation': None }
 
+class ActionSkipExam(Action):
+
+    def name(self):
+        return "action_skip_exam"
+
+    def run(self, dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        requestedSlot = tracker.slots['requested_slot']
+
+        if 'answer'  in requestedSlot:
+            dispatcher.utter_message(text=f"As you requested, i skip the current question.")
+            return [SlotSet(requestedSlot,'Na')]
+        else:
+            dispatcher.utter_message(text=f"I can't skip this question.")
+            return []
+
+
 class ActionResetExamSlots(Action):
 
     def name(self):
@@ -844,7 +891,7 @@ class ActionResetExamSlots(Action):
     def run(self, dispatcher: CollectingDispatcher,
         tracker: Tracker,
         domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        return [SlotSet('answer1',None), SlotSet('answer2',None)]
+        return [SlotSet('answer1',None), SlotSet('answer2',None), SlotSet('answer3',None), SlotSet('answer4',None), SlotSet('answer5',None)]
 
 class AskForSlotActionIdExam(Action):
     def name(self) -> Text:
@@ -905,6 +952,7 @@ class AskForSlotActionAnswer1(Action):
         starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
         questionNumber = randomQuestion()
+        askedQuestions.append(str(questionNumber))
 
         global currentQuestionNumber
         currentQuestionNumber = int(questionNumber)
@@ -922,7 +970,11 @@ class AskForSlotActionAnswer1(Action):
         proposal = queryProposalDB(questionNumber, language, languageDim)
         proposalList = proposal[0].split('*')
         
+        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
+        img = queryImagesDB(questionNumber, languageDim)
+        if img != '' and img != None:
+            dispatcher.utter_image_url(img)
         count = 0
         for answerProposal in proposalList:
             count += 1
@@ -947,6 +999,7 @@ class AskForSlotActionAnswer2(Action):
         questionNumber = nextQuestionNumber
         global currentQuestionNumber
         currentQuestionNumber = int(questionNumber)
+        askedQuestions.append(str(questionNumber))
         #questionNumber = randomQuestion()
 
         global realAnswers
@@ -956,7 +1009,11 @@ class AskForSlotActionAnswer2(Action):
         proposal = queryProposalDB(questionNumber, language, languageDim)
         proposalList = proposal[0].split('*')
         
+        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
+        img = queryImagesDB(questionNumber, languageDim)
+        if img != '' and img != None:
+            dispatcher.utter_image_url(img)
         count = 0
         for answerProposal in proposalList:
             count += 1
@@ -981,6 +1038,7 @@ class AskForSlotActionAnswer3(Action):
         questionNumber = nextQuestionNumber
         global currentQuestionNumber
         currentQuestionNumber = int(questionNumber)
+        askedQuestions.append(str(questionNumber))
         #questionNumber = randomQuestion()
 
         global realAnswers
@@ -990,7 +1048,11 @@ class AskForSlotActionAnswer3(Action):
         proposal = queryProposalDB(questionNumber, language, languageDim)
         proposalList = proposal[0].split('*')
         
+        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
+        img = queryImagesDB(questionNumber, languageDim)
+        if img != '' and img != None:
+            dispatcher.utter_image_url(img)
         count = 0
         for answerProposal in proposalList:
             count += 1
@@ -1015,6 +1077,7 @@ class AskForSlotActionAnswer4(Action):
         questionNumber = nextQuestionNumber
         global currentQuestionNumber
         currentQuestionNumber = int(questionNumber)
+        askedQuestions.append(str(questionNumber))
         #questionNumber = randomQuestion()
 
         global realAnswers
@@ -1024,7 +1087,11 @@ class AskForSlotActionAnswer4(Action):
         proposal = queryProposalDB(questionNumber, language, languageDim)
         proposalList = proposal[0].split('*')
         
+        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
+        img = queryImagesDB(questionNumber, languageDim)
+        if img != '' and img != None:
+            dispatcher.utter_image_url(img)
         count = 0
         for answerProposal in proposalList:
             count += 1
@@ -1049,6 +1116,7 @@ class AskForSlotActionAnswer5(Action):
         questionNumber = nextQuestionNumber
         global currentQuestionNumber
         currentQuestionNumber = int(questionNumber)
+        askedQuestions.append(str(questionNumber))
         #questionNumber = randomQuestion()
 
         global realAnswers
@@ -1058,7 +1126,11 @@ class AskForSlotActionAnswer5(Action):
         proposal = queryProposalDB(questionNumber, language, languageDim)
         proposalList = proposal[0].split('*')
         
+        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
+        img = queryImagesDB(questionNumber, languageDim)
+        if img != '' and img != None:
+            dispatcher.utter_image_url(img)
         count = 0
         for answerProposal in proposalList:
             count += 1

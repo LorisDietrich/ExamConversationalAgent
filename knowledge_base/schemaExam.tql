@@ -14,6 +14,9 @@ id-weight sub attribute,
 identifier sub attribute,
     value string;
     
+images sub attribute,
+    value string;
+    
 proposal-answer-text sub attribute,
     value string;
 
@@ -78,7 +81,8 @@ values sub entity,
     owns question-text,
     owns answer-text,
     owns language,
-    owns explication-text;
+    owns explication-text,
+    owns images;
 
 
 
