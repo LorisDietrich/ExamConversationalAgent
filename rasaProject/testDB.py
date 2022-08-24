@@ -2,6 +2,7 @@ from typedb.client import *
 id_exam = 'IALP'
 studentAnswer = {1:'22', 2:'2'}
 
+nestedDataDict = {'1': {'complexity': 2, 'theme': 'programming-language'}, '2': {'complexity': 3, 'theme': 'programming-language'}, '3': {'complexity': 1, 'theme': 'programming-semantic'}, '4': {'complexity': 1, 'theme': 'programming-semantic'}, '5': {'complexity': 1, 'theme': 'programming-semantic'}, '6': {'complexity': 1, 'theme': 'programming-semantic'}, '7': {'complexity': 2, 'theme': 'programming-semantic'}, '8': {'complexity': 2, 'theme': 'programming-semantic'}, '9': {'complexity': 2, 'theme': 'programming-convention'}, '10': {'complexity': 2, 'theme': 'programming-convention'}, '11': {'complexity': 2, 'theme': 'programming-convention'}, '12': {'complexity': 2, 'theme': 'programming-convention'}, '13': {'complexity': 1, 'theme': 'it-logo'}, '14': {'complexity': 1, 'theme': 'it-logo'}, '15': {'complexity': 1, 'theme': 'it-logo'}, '16': {'complexity': 3, 'theme': 'it-logo'}, '17': {'complexity': 3, 'theme': 'it-logo'}, '18': {'complexity': 3, 'theme': 'it-logo'}}
 
 for i in range(len(studentAnswer)):
     #print(len(studentAnswer))
@@ -229,5 +230,30 @@ def queryImagesDB(questionNumber, langDim):
 
 questionNumber = '18'
 languageDim = 'f'
-#print(queryQuestionThemeDB(questionNumber, languageDim))
-print(queryImagesDB(questionNumber, languageDim))
+
+
+
+def getMediumComplexity():
+    min = None
+    max = None
+    res = None
+    for index in nestedDataDict:
+        if min == None or nestedDataDict[index]['complexity'] < min:
+            min = nestedDataDict[index]['complexity']
+        if max == None or nestedDataDict[index]['complexity'] > max:
+            max = nestedDataDict[index]['complexity']
+    res = (min+max)/2
+    return int(res)
+
+import csv
+
+def parse_data_to_dictionaries():
+    items = []
+    with open("./values.csv", encoding="utf8") as data:  # 1
+        for row in csv.DictReader(data, skipinitialspace=True):
+            item = {key: value for key, value in row.items()}
+            items.append(item)  # 2
+    return items
+
+print(parse_data_to_dictionaries())
+

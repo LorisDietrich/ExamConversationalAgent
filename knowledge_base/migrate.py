@@ -75,7 +75,7 @@ def question_template(question):
 
 def parse_data_to_dictionaries(input):
     items = []
-    with open(input["data_path"] + ".csv") as data:  # 1
+    with open(input["data_path"] + ".csv", encoding="utf8") as data:  # 1
         for row in csv.DictReader(data, skipinitialspace=True):
             item = {key: value for key, value in row.items()}
             items.append(item)  # 2

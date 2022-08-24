@@ -42,6 +42,7 @@ currentQuestionNumber = 0
 nextQuestionNumber = 0
 nestedDataDict = {}
 lastAnswerResult = True
+mediumComplexity = 2
 instruction = {
     #en
     'TF': 'Please, answer this question with a true or false statement.',
@@ -198,8 +199,17 @@ def getGrade(studentAnswer, answer, langDim):
 def getRandomInList(listed):
     return listed[random.randint(0,(len(listed)-1))]
 
-def getRandomInList(listed):
-    return listed[random.randint(0,(len(listed)-1))]
+def getMediumComplexity():
+    min = None
+    max = None
+    res = None
+    for index in nestedDataDict:
+        if min == None or nestedDataDict[index]['complexity'] < min:
+            min = nestedDataDict[index]['complexity']
+        if max == None or nestedDataDict[index]['complexity'] > max:
+            max = nestedDataDict[index]['complexity']
+    res = (min+max)/2
+    return int(res)
 
 def queryAllValues():
     with TypeDB.core_client("localhost:1729") as client:
@@ -219,6 +229,12 @@ def getOnlyNumberValues(value):
 def randomQuestion():
     random = getOnlyNumberValues(getRandomInList(queryAllValues()))
     while random in askedQuestions:
+        random = getOnlyNumberValues(getRandomInList(queryAllValues()))
+    return str(random)
+
+def randomQuestionComplexity2():
+    random = getOnlyNumberValues(getRandomInList(queryAllValues()))
+    while nestedDataDict[str(random)]['complexity'] != mediumComplexity:
         random = getOnlyNumberValues(getRandomInList(queryAllValues()))
     return str(random)
 
@@ -338,7 +354,7 @@ exams = queryAllDatabase()
 
 def queryExplicationDB(questionNumber, langDim):
     with TypeDB.core_client("localhost:1729") as client:
-        with client.session("IALP", SessionType.DATA) as session:
+        with client.session(id_exam, SessionType.DATA) as session:
             with session.transaction(TransactionType.READ) as read_transaction:
                 query = 'match $x isa values, has identifier $i, has explication-text $q; {$i = "values'
                 query += f'{questionNumber}{langDim}'
@@ -946,12 +962,14 @@ class AskForSlotActionAnswer1(Action):
     ) -> List[EventType]:
 
         createNestedDataDict(language, languageDim)
+        global mediumComplexity
+        mediumComplexity = getMediumComplexity()
 
         now = datetime.now()
         global starting_time
         starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
-        questionNumber = randomQuestion()
+        questionNumber = randomQuestionComplexity2()
         askedQuestions.append(str(questionNumber))
 
         global currentQuestionNumber

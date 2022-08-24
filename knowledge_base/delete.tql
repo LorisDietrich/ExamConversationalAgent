@@ -1,1 +1,1 @@
-match $x isa values, has identifier $i, has images $q; {$i = "values18f";}; get $q;
+match $x isa values, has identifier $i, has question-text $q; {$i = "values1f";}; get $q;
