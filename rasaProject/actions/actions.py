@@ -8,6 +8,7 @@
 # This is a simple example for a custom action which utters "Hello World!"
 
 from glob import glob
+import json
 import random
 from typing import Any, Text, Dict, List, Union
 import arrow
@@ -43,6 +44,10 @@ nextQuestionNumber = 0
 nestedDataDict = {}
 lastAnswerResult = True
 mediumComplexity = 2
+TrueFalseType = ['TF', 'VF']
+MultipleChoiceType = ['MCQ', 'QCM']
+buttonsTF = [{"title": 'True' , "payload": '/affirm'}, {"title": 'False' , "payload": '/deny'}]
+buttonsMCQ = []
 instruction = {
     #en
     'TF': 'Please, answer this question with a true or false statement.',
@@ -170,7 +175,7 @@ def getGrade(studentAnswer, answer, langDim):
     explication = {}
     tempGrade = 0
     totalPoint = 0
-    print(f'answer: {answer}')
+    #print(f'answer: {answer}')
     for n in studentAnswer:
         point = queryQuestionPointDB(n, languageDim)
         totalPoint += point
@@ -187,12 +192,12 @@ def getGrade(studentAnswer, answer, langDim):
         else:
             explication[n+1] = queryExplicationDB(str(n+1), langDim)
             """
-        print(f'studentAnswer: {studentAnswer[n]}')
-        print(f'answer: {answer[n]}')
-        print(f'n: {n}')
-        print(f'point: {point}')
-        print(f'totalPoint: {totalPoint}')
-        print(f'tempGrade: {tempGrade}')
+        #print(f'studentAnswer: {studentAnswer[n]}')
+        #print(f'answer: {answer[n]}')
+        #print(f'n: {n}')
+        #print(f'point: {point}')
+        #print(f'totalPoint: {totalPoint}')
+        #print(f'tempGrade: {tempGrade}')
     res = ((tempGrade/totalPoint)*5)+1
     return res, explication
 
@@ -244,7 +249,6 @@ def getQuestionPerfectMatch():
     for i in nestedDataDict:
         if str(i) not in askedQuestions:
             if lastAnswerResult == True:
-                print(i)
                 if nestedDataDict[i]['complexity'] >= currentComplexity and nestedDataDict[i]['theme'] == currentTheme:
                     tempDict = {i: nestedDataDict[i]}
                     res.append(tempDict)
@@ -359,7 +363,6 @@ def queryExplicationDB(questionNumber, langDim):
                 query = 'match $x isa values, has identifier $i, has explication-text $q; {$i = "values'
                 query += f'{questionNumber}{langDim}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 for answer in answer_iterator:
                     res = answer.get('q').get_value()
@@ -422,7 +425,6 @@ def queryQuestionNamePointDB(questionNumber, langDim):
                 query = 'match $x (values: $v,weight: $w,category: $c) isa question, has identifier $i, has id-weight $q; {$i = "question'
                 query += f'{questionNumber}{langDim}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 for answer in answer_iterator:
                     res = answer.get('q').get_value()
@@ -438,7 +440,6 @@ def queryQuestionPointDB(questionNumber, langDim):
                 query = 'match $x isa weight, has identifier $i, has point $q; {$i = "'
                 query += f'{weightID}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 for answer in answer_iterator:
                     res = answer.get('q').get_value()
@@ -492,7 +493,6 @@ def queryAllNumberDB(lang):
                 query = 'match $x isa values, has identifier $q, has language $i; {$i = "'
                 query += f'{lang}'
                 query += '";}; get $q;'
-                print(query)
                 answer_iterator = read_transaction.query().match(query)
                 res = []
                 for answer in answer_iterator:
@@ -994,13 +994,22 @@ class AskForSlotActionAnswer1(Action):
         if img != '' and img != None:
             dispatcher.utter_image_url(img)
         count = 0
+        global buttonsMCQ
+        buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
             dispatcher.utter_message(text=f'{count}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
-        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        if questionType in TrueFalseType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsTF)
+        elif questionType in MultipleChoiceType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
+        else:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
         return []
 
 class AskForSlotActionAnswer2(Action):
@@ -1033,13 +1042,22 @@ class AskForSlotActionAnswer2(Action):
         if img != '' and img != None:
             dispatcher.utter_image_url(img)
         count = 0
+        global buttonsMCQ
+        buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
             dispatcher.utter_message(text=f'{count}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
-        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        if questionType in TrueFalseType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsTF)
+        elif questionType in MultipleChoiceType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
+        else:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
         return []
 
 class AskForSlotActionAnswer3(Action):
@@ -1072,13 +1090,22 @@ class AskForSlotActionAnswer3(Action):
         if img != '' and img != None:
             dispatcher.utter_image_url(img)
         count = 0
+        global buttonsMCQ
+        buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
             dispatcher.utter_message(text=f'{count}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
-        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        if questionType in TrueFalseType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsTF)
+        elif questionType in MultipleChoiceType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
+        else:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
         return []
 
 class AskForSlotActionAnswer4(Action):
@@ -1111,13 +1138,22 @@ class AskForSlotActionAnswer4(Action):
         if img != '' and img != None:
             dispatcher.utter_image_url(img)
         count = 0
+        global buttonsMCQ
+        buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
             dispatcher.utter_message(text=f'{count}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
-        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        if questionType in TrueFalseType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsTF)
+        elif questionType in MultipleChoiceType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
+        else:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
         return []
 
 class AskForSlotActionAnswer5(Action):
@@ -1150,13 +1186,22 @@ class AskForSlotActionAnswer5(Action):
         if img != '' and img != None:
             dispatcher.utter_image_url(img)
         count = 0
+        global buttonsMCQ
+        buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
             dispatcher.utter_message(text=f'{count}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
-        dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        if questionType in TrueFalseType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsTF)
+        elif questionType in MultipleChoiceType:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
+        else:
+            dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
         return []
 
 city_db = {

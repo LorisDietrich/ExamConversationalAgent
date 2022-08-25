@@ -255,5 +255,5 @@ def parse_data_to_dictionaries():
             items.append(item)  # 2
     return items
 
-print(parse_data_to_dictionaries())
+
 

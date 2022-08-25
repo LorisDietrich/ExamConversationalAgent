@@ -70,6 +70,7 @@ nlu:
     - I don't think so
     - don't like that
     - no way
+    - no need
     - not really
     - this cannot be true
     - this is false
@@ -91,6 +92,7 @@ nlu:
     - jamais de la vie
     - je ne pense pas
     - je pense vraiment pas
+    - pas besoins
 - intent: mood_great
   examples: |
     - perfect
