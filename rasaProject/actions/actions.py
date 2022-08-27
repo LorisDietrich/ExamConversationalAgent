@@ -1129,8 +1129,17 @@ class ValidationExamForm(FormValidationAction):
                     img = queryImagesDB(str(i), languageDim)
                     if img != '' and img != None:
                         dispatcher.utter_image_url(img)
-                    dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAnswer'][language]}: {answers[i]}, {utterMultilanguage['eplanationRealAnswer'][language]} {realAnswers[i]}.")
-                    dispatcher.utter_message(text=f"{utterMultilanguage['eplanationExplanation'][language]}: {explication[i]}")
+                    if type(answers[i]) == list:
+                        dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAnswer'][language]}:")
+                        for n in answers[i]:
+                            dispatcher.utter_message(text=f"{answers[i][n]}")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['eplanationRealAnswer'][language]}")
+                        for m in realAnswers[i]:
+                            dispatcher.utter_message(text=f"{realAnswers[i][m]}")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['eplanationExplanation'][language]}: {explication[i]}")
+                    else:
+                        dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAnswer'][language]}: {answers[i]}, {utterMultilanguage['eplanationRealAnswer'][language]} {realAnswers[i]}.")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['eplanationExplanation'][language]}: {explication[i]}")
             elif slot_value == True and explication == {}:
                     dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAllCorrect'][language]}.")
 
@@ -1139,9 +1148,16 @@ class ValidationExamForm(FormValidationAction):
             tempsRealAnswerFormated = []
             tempsIdQuestions  = []
             for n in answers:
-                tempsAnswerFormated.append(answers[n])
-                tempsRealAnswerFormated.append(realAnswers[n])
-                tempsIdQuestions.append(idQuestions[n])
+                if type(answers[n]) == list:
+                    t = '/'.join(answers[n])
+                    u = '/'.join(realAnswers[n])
+                    tempsAnswerFormated.append(t)
+                    tempsRealAnswerFormated.append(u)
+                    tempsIdQuestions.append(idQuestions[n])
+                else:
+                    tempsAnswerFormated.append(answers[n])
+                    tempsRealAnswerFormated.append(realAnswers[n])
+                    tempsIdQuestions.append(idQuestions[n])
             answersFormated = '*'.join(tempsAnswerFormated)
             realAnswerFormated = '*'.join(tempsRealAnswerFormated)
             idQuestionsFormated = '*'.join(tempsIdQuestions)
