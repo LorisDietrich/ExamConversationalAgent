@@ -10,6 +10,7 @@
 from glob import glob
 import json
 import random
+from secrets import randbelow
 from typing import Any, Text, Dict, List, Union
 import arrow
 import dateparser
@@ -24,9 +25,12 @@ from rasa_sdk import Action, Tracker, FormValidationAction
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.events import EventType
 import pymysql.cursors
-
+alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 realAnswers = {}
 answers = {}
+question = ''
+proposal = ''
+proposalList = []
 idQuestions = {}
 starting_time = ''
 ending_time = ''
@@ -40,32 +44,39 @@ askedQuestions = []
 currentComplexity = 2
 currentTheme = ''
 currentQuestionNumber = 0
+questionNumber = 0
+currentQuestionType = ''
 nextQuestionNumber = 0
 nestedDataDict = {}
 lastAnswerResult = True
 mediumComplexity = 2
 TrueFalseType = ['TF', 'VF']
 MultipleChoiceType = ['MCQ', 'QCM']
+MultipleChoiceMultipleAnswerType = ['MCQMA', 'QCMPR']
 buttonsTF = [{"title": 'True' , "payload": '/affirm'}, {"title": 'False' , "payload": '/deny'}]
 buttonsMCQ = []
+currentMention = []
+questionAsked = {}
 instruction = {
     #en
     'TF': 'Please, answer this question with a true or false statement.',
-    'MCQ': '--> Multiple choice question. Please, answer with the number of the best answer.',
+    'MCQ': '--> Multiple choice question. Please, answer with the letter of the best answer.',
+    'MCQMA': '--> Multiple choices question with multiple answers. Please, answer with the letters of the best answers.',
     #fr
     'VF': "S'il vous plait, répondez par vrai ou faux.",
-    'QCM': "--> Question à choix multiple. S'il vous plait, répondez avec le numéro de la meilleure réponse."
+    'QCM': "--> Question à choix multiple. S'il vous plait, répondez avec la lettre de la meilleure réponse.",
+    'QCMPR': "--> Question à choix multiples avec plusieurs réponses. S'il vous plait, répondez avec les lettres des meilleures réponses."
 
 }
 
 mapping = {
-    1: ['first', 'one', '1', 'premier', 'un', 'premiere', 'première', 'une'],
-    2: ['second', 'two', '2', 'deux', 'deuxieme', 'deuxième'],
-    3: ['third', 'three', '3', 'trois', 'troisieme', 'troisième'],
-    4: ['forth', 'four', '4', 'quatre', 'quatrieme', 'quatrième'],
-    5: ['fifth', 'five', '5', 'cinq', 'cinquieme', 'cinquième'],
-    6: ['sixth', 'six', '6', 'six', 'sixieme', 'sixième'],
-    0: ['last', 'lattest', 'late', 'dernier', 'derniere', 'dernière']       
+    1: ['first', 'one', 'a', 'premier', 'un', 'premiere', 'première', 'une'],
+    2: ['second', 'two', 'b', 'deux', 'deuxieme', 'deuxième'],
+    3: ['third', 'three', 'c', 'trois', 'troisieme', 'troisième'],
+    4: ['forth', 'four', 'd', 'quatre', 'quatrieme', 'quatrième'],
+    5: ['fifth', 'five', 'e', 'cinq', 'cinquieme', 'cinquième'],
+    6: ['sixth', 'six', 'f', 'six', 'sixieme', 'sixième'],
+    0: ['last', 'latest', 'latter', 'late', 'dernier', 'derniere', 'dernière']       
 }
 
 mappingTF = {
@@ -134,6 +145,10 @@ utterMultilanguage = {
     'listExam': {
         'english': "Here's the list of all available exam",
         'francais': 'Voici la liste de tous les examens disponibles'
+    },
+    'multipleAnswers': {
+        'english': "There is more than one right answer. Please give us a least another...",
+        'francais': "Il y a plus qu'une réponse possible. Donnez en au moins une autre..."
     }
 }
 
@@ -163,6 +178,16 @@ def get_key_from_value(d, val):
         return keys[0]
     return None
 
+def verifyList(a,b):
+    res = True
+    for i in a:
+        if str(i).lower() not in str(b).lower():
+            res = False
+    for j in b:
+        if str(j).lower() not in str(a).lower():
+            res = False
+    return res
+
 #https://appdividend.com/2022/03/15/how-to-check-if-string-is-integer-in-python/#:~:text=To%20check%20if%20a%20string,string%20are%20digits%20or%20not.
 def checkInt(str):
     try:
@@ -175,14 +200,19 @@ def getGrade(studentAnswer, answer, langDim):
     explication = {}
     tempGrade = 0
     totalPoint = 0
-    #print(f'answer: {answer}')
     for n in studentAnswer:
         point = queryQuestionPointDB(n, languageDim)
         totalPoint += point
-        if str(studentAnswer[n]).lower() == str(answer[n]).lower():
-            tempGrade += point
+        if type(studentAnswer[n]) == list:
+            if verifyList(studentAnswer[n], answer[n]) == True:
+                tempGrade += point
+            else:
+                explication[n] = queryExplicationDB(str(n), langDim)
         else:
-            explication[n] = queryExplicationDB(str(n), langDim)
+            if str(studentAnswer[n]).lower() == str(answer[n]).lower():
+                tempGrade += point
+            else:
+                explication[n] = queryExplicationDB(str(n), langDim)
             """
     for n in range(len(studentAnswer)):
         point = queryQuestionPointDB((n), languageDim)
@@ -198,7 +228,7 @@ def getGrade(studentAnswer, answer, langDim):
         #print(f'point: {point}')
         #print(f'totalPoint: {totalPoint}')
         #print(f'tempGrade: {tempGrade}')
-    res = ((tempGrade/totalPoint)*5)+1
+    res = round((((tempGrade/totalPoint)*5)+1), 2)
     return res, explication
 
 def getRandomInList(listed):
@@ -524,7 +554,10 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 tempSlot = False
             elif currentIntent == 'resolve_entity':
-                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    tempSlot = tracker.get_slot('mention_list')
+                else:
+                    tempSlot = next(tracker.get_latest_entity_values('mention'), None)
 
             return { 'answer1': tempSlot }
     
@@ -540,7 +573,10 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 tempSlot = False
             elif currentIntent == 'resolve_entity':
-                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    tempSlot = tracker.get_slot('mention_list')
+                else:
+                    tempSlot = next(tracker.get_latest_entity_values('mention'), None)
 
             return { 'answer2': tempSlot }
 
@@ -556,7 +592,10 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 tempSlot = False
             elif currentIntent == 'resolve_entity':
-                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    tempSlot = tracker.get_slot('mention_list')
+                else:
+                    tempSlot = next(tracker.get_latest_entity_values('mention'), None)
 
             return { 'answer3': tempSlot }
 
@@ -572,7 +611,10 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 tempSlot = False
             elif currentIntent == 'resolve_entity':
-                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    tempSlot = tracker.get_slot('mention_list')
+                else:
+                    tempSlot = next(tracker.get_latest_entity_values('mention'), None)
 
             return { 'answer4': tempSlot }
 
@@ -588,7 +630,10 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 tempSlot = False
             elif currentIntent == 'resolve_entity':
-                tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    tempSlot = tracker.get_slot('mention_list')
+                else:
+                    tempSlot = next(tracker.get_latest_entity_values('mention'), None)
 
             return { 'answer5': tempSlot }
 
@@ -614,7 +659,7 @@ class ValidationExamForm(FormValidationAction):
 
         if slot_value != None and str(slot_value).upper() in exams:
             global id_exam
-            id_exam = slot_value
+            id_exam = str(slot_value).upper()
             dispatcher.utter_message(text=f'Thank you for giving your exam id: {slot_value}.')
             return { 'id_exam': slot_value }
         else:
@@ -680,18 +725,66 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 answer = mappingTF[language][str(slot_value)]
             elif currentIntent == 'resolve_entity':
-                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
-                answer = proposalArray[answerTemp-1]
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    answerArray = []
+                    for answerSlot in slot_value:
+                        answerTemp = get_key_from_value(mapping, str(answerSlot).lower())
+                        answerArray.append(proposalArray[answerTemp-1])
+                        answer = answerArray
+                else:
+                    answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                    answer = proposalArray[answerTemp-1]
             elif currentIntent == 'skip_exam':
                 answer = 'Na'
+            global currentMention
             global lastAnswerResult
-            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
-                lastAnswerResult = True
-            else: 
-                lastAnswerResult = False
-
-            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
+            if type(answer) == list:
+                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
+                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
+                    #SlotSet('mention_list',None)
+                    #currentMention = []
+                    #return { 'answer1': None }
+                if len(answer) == 1:
+                    for a in answer:
+                        currentMention.append(a)
+                    if len(currentMention) == 1:
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        return { 'answer1': None }
+                    else:
+                        lastAnswerResult = True
+                        for i in currentMention:
+                            if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                                lastAnswerResult = False
+                        for j in realAnswers[currentQuestionNumber]:
+                            if str(j).lower() not in str(currentMention).lower():
+                                lastAnswerResult = False
+        
+                else:
+                    lastAnswerResult = True
+                    for i in answer:
+                        if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                            lastAnswerResult = False
+                    for j in realAnswers[currentQuestionNumber]:
+                        if str(j).lower() not in str(answer).lower():
+                            lastAnswerResult = False
+            else:
+                if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                    lastAnswerResult = True
+                else: 
+                    lastAnswerResult = False
+            if currentMention != []:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in currentMention:
+                    dispatcher.utter_message(text=f"{ans}")
+            elif type(answer) == list:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in answer:
+                    dispatcher.utter_message(text=f"{ans}")
+            else:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
             answers[int(askedQuestions[-1])] = (str(answer))
+            SlotSet('mention_list', None)
+            currentMention = []
             return { 'answer1': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -713,20 +806,66 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 answer = mappingTF[language][str(slot_value)]
             elif currentIntent == 'resolve_entity':
-                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
-                answer = proposalArray[answerTemp-1]
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    answerArray = []
+                    for answerSlot in slot_value:
+                        answerTemp = get_key_from_value(mapping, str(answerSlot).lower())
+                        answerArray.append(proposalArray[answerTemp-1])
+                        answer = answerArray
+                else:
+                    answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                    answer = proposalArray[answerTemp-1]
             elif currentIntent == 'skip_exam':
                 answer = 'Na'
+            global currentMention
             global lastAnswerResult
-            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
-                lastAnswerResult = True
-            else: 
-                lastAnswerResult = False
-
-            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
+            if type(answer) == list:
+                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
+                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
+                    #SlotSet('mention_list',None)
+                    #currentMention = []
+                    #return { 'answer1': None }
+                if len(answer) == 1:
+                    for a in answer:
+                        currentMention.append(a)
+                    if len(currentMention) == 1:
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        return { 'answer2': None }
+                    else:
+                        lastAnswerResult = True
+                        for i in currentMention:
+                            if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                                lastAnswerResult = False
+                        for j in realAnswers[currentQuestionNumber]:
+                            if str(j).lower() not in str(currentMention).lower():
+                                lastAnswerResult = False
+        
+                else:
+                    lastAnswerResult = True
+                    for i in answer:
+                        if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                            lastAnswerResult = False
+                    for j in realAnswers[currentQuestionNumber]:
+                        if str(j).lower() not in str(answer).lower():
+                            lastAnswerResult = False
+            else:
+                if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                    lastAnswerResult = True
+                else: 
+                    lastAnswerResult = False
+            if currentMention != []:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in currentMention:
+                    dispatcher.utter_message(text=f"{ans}")
+            elif type(answer) == list:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in answer:
+                    dispatcher.utter_message(text=f"{ans}")
+            else:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
             answers[int(askedQuestions[-1])] = (str(answer))
-            
-
+            SlotSet('mention_list', None)
+            currentMention = []
             return { 'answer2': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -748,19 +887,66 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 answer = mappingTF[language][str(slot_value)]
             elif currentIntent == 'resolve_entity':
-                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
-                answer = proposalArray[answerTemp-1]
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    answerArray = []
+                    for answerSlot in slot_value:
+                        answerTemp = get_key_from_value(mapping, str(answerSlot).lower())
+                        answerArray.append(proposalArray[answerTemp-1])
+                        answer = answerArray
+                else:
+                    answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                    answer = proposalArray[answerTemp-1]
             elif currentIntent == 'skip_exam':
                 answer = 'Na'
+            global currentMention
             global lastAnswerResult
-            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
-                lastAnswerResult = True
-            else: 
-                lastAnswerResult = False
-
-            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
+            if type(answer) == list:
+                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
+                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
+                    #SlotSet('mention_list',None)
+                    #currentMention = []
+                    #return { 'answer1': None }
+                if len(answer) == 1:
+                    for a in answer:
+                        currentMention.append(a)
+                    if len(currentMention) == 1:
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        return { 'answer2': None }
+                    else:
+                        lastAnswerResult = True
+                        for i in currentMention:
+                            if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                                lastAnswerResult = False
+                        for j in realAnswers[currentQuestionNumber]:
+                            if str(j).lower() not in str(currentMention).lower():
+                                lastAnswerResult = False
+        
+                else:
+                    lastAnswerResult = True
+                    for i in answer:
+                        if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                            lastAnswerResult = False
+                    for j in realAnswers[currentQuestionNumber]:
+                        if str(j).lower() not in str(answer).lower():
+                            lastAnswerResult = False
+            else:
+                if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                    lastAnswerResult = True
+                else: 
+                    lastAnswerResult = False
+            if currentMention != []:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in currentMention:
+                    dispatcher.utter_message(text=f"{ans}")
+            elif type(answer) == list:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in answer:
+                    dispatcher.utter_message(text=f"{ans}")
+            else:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
             answers[int(askedQuestions[-1])] = (str(answer))
-
+            SlotSet('mention_list', None)
+            currentMention = []
             return { 'answer3': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -782,19 +968,66 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 answer = mappingTF[language][str(slot_value)]
             elif currentIntent == 'resolve_entity':
-                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
-                answer = proposalArray[answerTemp-1]
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    answerArray = []
+                    for answerSlot in slot_value:
+                        answerTemp = get_key_from_value(mapping, str(answerSlot).lower())
+                        answerArray.append(proposalArray[answerTemp-1])
+                        answer = answerArray
+                else:
+                    answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                    answer = proposalArray[answerTemp-1]
             elif currentIntent == 'skip_exam':
                 answer = 'Na'
-            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
-            answers[int(askedQuestions[-1])] = (str(answer))
-
+            global currentMention
             global lastAnswerResult
-            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
-                lastAnswerResult = True
-            else: 
-                lastAnswerResult = False
-
+            if type(answer) == list:
+                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
+                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
+                    #SlotSet('mention_list',None)
+                    #currentMention = []
+                    #return { 'answer1': None }
+                if len(answer) == 1:
+                    for a in answer:
+                        currentMention.append(a)
+                    if len(currentMention) == 1:
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        return { 'answer2': None }
+                    else:
+                        lastAnswerResult = True
+                        for i in currentMention:
+                            if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                                lastAnswerResult = False
+                        for j in realAnswers[currentQuestionNumber]:
+                            if str(j).lower() not in str(currentMention).lower():
+                                lastAnswerResult = False
+        
+                else:
+                    lastAnswerResult = True
+                    for i in answer:
+                        if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                            lastAnswerResult = False
+                    for j in realAnswers[currentQuestionNumber]:
+                        if str(j).lower() not in str(answer).lower():
+                            lastAnswerResult = False
+            else:
+                if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                    lastAnswerResult = True
+                else: 
+                    lastAnswerResult = False
+            if currentMention != []:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in currentMention:
+                    dispatcher.utter_message(text=f"{ans}")
+            elif type(answer) == list:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in answer:
+                    dispatcher.utter_message(text=f"{ans}")
+            else:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
+            answers[int(askedQuestions[-1])] = (str(answer))
+            SlotSet('mention_list', None)
+            currentMention = []
             return { 'answer4': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -816,22 +1049,66 @@ class ValidationExamForm(FormValidationAction):
             elif currentIntent == 'deny':
                 answer = mappingTF[language][str(slot_value)]
             elif currentIntent == 'resolve_entity':
-                answerTemp = get_key_from_value(mapping, str(slot_value).lower())
-                answer = proposalArray[answerTemp-1]
+                if  currentQuestionType in MultipleChoiceMultipleAnswerType:
+                    answerArray = []
+                    for answerSlot in slot_value:
+                        answerTemp = get_key_from_value(mapping, str(answerSlot).lower())
+                        answerArray.append(proposalArray[answerTemp-1])
+                        answer = answerArray
+                else:
+                    answerTemp = get_key_from_value(mapping, str(slot_value).lower())
+                    answer = proposalArray[answerTemp-1]
             elif currentIntent == 'skip_exam':
                 answer = 'Na'
+            global currentMention
             global lastAnswerResult
-            if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
-                lastAnswerResult = True
-            else: 
-                lastAnswerResult = False
-
-            dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}")
+            if type(answer) == list:
+                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
+                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
+                    #SlotSet('mention_list',None)
+                    #currentMention = []
+                    #return { 'answer1': None }
+                if len(answer) == 1:
+                    for a in answer:
+                        currentMention.append(a)
+                    if len(currentMention) == 1:
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        return { 'answer2': None }
+                    else:
+                        lastAnswerResult = True
+                        for i in currentMention:
+                            if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                                lastAnswerResult = False
+                        for j in realAnswers[currentQuestionNumber]:
+                            if str(j).lower() not in str(currentMention).lower():
+                                lastAnswerResult = False
+        
+                else:
+                    lastAnswerResult = True
+                    for i in answer:
+                        if str(i).lower() not in str(realAnswers[currentQuestionNumber]).lower():
+                            lastAnswerResult = False
+                    for j in realAnswers[currentQuestionNumber]:
+                        if str(j).lower() not in str(answer).lower():
+                            lastAnswerResult = False
+            else:
+                if str(answer).lower() == str(realAnswers[currentQuestionNumber]).lower():
+                    lastAnswerResult = True
+                else: 
+                    lastAnswerResult = False
+            if currentMention != []:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in currentMention:
+                    dispatcher.utter_message(text=f"{ans}")
+            elif type(answer) == list:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
+                for ans in answer:
+                    dispatcher.utter_message(text=f"{ans}")
+            else:
+                dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
             answers[int(askedQuestions[-1])] = (str(answer))
-            now = datetime.now()
-            global ending_time
-            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
-
+            SlotSet('mention_list', None)
+            currentMention = []
             return { 'answer5': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -962,32 +1239,46 @@ class AskForSlotActionAnswer1(Action):
     ) -> List[EventType]:
 
         createNestedDataDict(language, languageDim)
-        global mediumComplexity
-        mediumComplexity = getMediumComplexity()
 
-        now = datetime.now()
-        global starting_time
-        starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
+        if 1 not in questionAsked:
 
-        questionNumber = randomQuestionComplexity2()
-        askedQuestions.append(str(questionNumber))
+            global mediumComplexity
+            mediumComplexity = getMediumComplexity()
 
-        global currentQuestionNumber
-        currentQuestionNumber = int(questionNumber)
+            now = datetime.now()
+            global starting_time
+            starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
-        global currentComplexity
-        currentComplexity = queryQuestionComplexityDB(questionNumber, languageDim)
+            #questionNumber = randomQuestionComplexity2()
+            global questionNumber
+            questionNumber = '21'
+            askedQuestions.append(str(questionNumber))
 
-        global currentTheme
-        currentTheme = queryQuestionThemeDB(questionNumber, languageDim)
+            global currentQuestionNumber
+            currentQuestionNumber = int(questionNumber)
 
-        global realAnswers
-        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+            global currentComplexity
+            currentComplexity = queryQuestionComplexityDB(questionNumber, languageDim)
 
-        question = queryQuestionDB(questionNumber, language, languageDim)
-        proposal = queryProposalDB(questionNumber, language, languageDim)
-        proposalList = proposal[0].split('*')
-        
+            global currentTheme
+            currentTheme = queryQuestionThemeDB(questionNumber, languageDim)
+
+            global currentQuestionType
+            currentQuestionType = queryQuestionTypeDB(questionNumber, languageDim)
+
+            global realAnswers
+            tempRealAnswer = (queryAnswerDB(questionNumber, language, languageDim)).split('*')
+            if len(tempRealAnswer) == 1:
+                realAnswers[int(questionNumber)] = tempRealAnswer[0]
+            else:
+                realAnswers[int(questionNumber)] = tempRealAnswer
+            global question
+            question = queryQuestionDB(questionNumber, language, languageDim)
+            global proposal
+            proposal = queryProposalDB(questionNumber, language, languageDim)
+            global proposalList
+            proposalList = proposal[0].split('*')
+            
         dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
         img = queryImagesDB(questionNumber, languageDim)
@@ -998,10 +1289,10 @@ class AskForSlotActionAnswer1(Action):
         buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
-            dispatcher.utter_message(text=f'{count}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
             buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
-        
+
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
         if questionType in TrueFalseType:
@@ -1010,6 +1301,7 @@ class AskForSlotActionAnswer1(Action):
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
         else:
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        questionAsked[1] = True
         return []
 
 class AskForSlotActionAnswer2(Action):
@@ -1019,22 +1311,38 @@ class AskForSlotActionAnswer2(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-        global nextQuestionNumber, currentComplexity, currentTheme
-        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
-        currentTheme = nextTheme
-        currentComplexity = nextComplexity
-        questionNumber = nextQuestionNumber
-        global currentQuestionNumber
-        currentQuestionNumber = int(questionNumber)
-        askedQuestions.append(str(questionNumber))
-        #questionNumber = randomQuestion()
 
-        global realAnswers
-        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+        if 2 not in questionAsked:
 
-        question = queryQuestionDB(questionNumber, language, languageDim)
-        proposal = queryProposalDB(questionNumber, language, languageDim)
-        proposalList = proposal[0].split('*')
+            global nextQuestionNumber, currentComplexity, currentTheme
+            nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+            global currentTheme
+            currentTheme = nextTheme
+            global currentComplexity
+            currentComplexity = nextComplexity
+            global questionNumber
+            questionNumber = nextQuestionNumber
+            global currentQuestionNumber
+            currentQuestionNumber = int(questionNumber)
+            askedQuestions.append(str(questionNumber))
+            #questionNumber = randomQuestion()
+
+            global currentQuestionType
+            currentQuestionType = queryQuestionTypeDB(questionNumber, languageDim)
+
+            global realAnswers
+            tempRealAnswer = (queryAnswerDB(questionNumber, language, languageDim)).split('*')
+            if len(tempRealAnswer) == 1:
+                realAnswers[int(questionNumber)] = tempRealAnswer[0]
+            else:
+                realAnswers[int(questionNumber)] = tempRealAnswer
+            
+            global question
+            question = queryQuestionDB(questionNumber, language, languageDim)
+            global proposal
+            proposal = queryProposalDB(questionNumber, language, languageDim)
+            global proposalList
+            proposalList = proposal[0].split('*')
         
         dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
@@ -1046,8 +1354,8 @@ class AskForSlotActionAnswer2(Action):
         buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
-            dispatcher.utter_message(text=f'{count}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
             buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
@@ -1058,6 +1366,7 @@ class AskForSlotActionAnswer2(Action):
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
         else:
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        questionAsked[2] = True
         return []
 
 class AskForSlotActionAnswer3(Action):
@@ -1067,22 +1376,38 @@ class AskForSlotActionAnswer3(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-        global nextQuestionNumber, currentComplexity, currentTheme
-        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
-        currentTheme = nextTheme
-        currentComplexity = nextComplexity
-        questionNumber = nextQuestionNumber
-        global currentQuestionNumber
-        currentQuestionNumber = int(questionNumber)
-        askedQuestions.append(str(questionNumber))
-        #questionNumber = randomQuestion()
 
-        global realAnswers
-        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+        if 3 not in questionAsked:
 
-        question = queryQuestionDB(questionNumber, language, languageDim)
-        proposal = queryProposalDB(questionNumber, language, languageDim)
-        proposalList = proposal[0].split('*')
+            global nextQuestionNumber, currentComplexity, currentTheme
+            nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+            global currentTheme
+            currentTheme = nextTheme
+            global currentComplexity
+            currentComplexity = nextComplexity
+            global questionNumber
+            questionNumber = nextQuestionNumber
+            global currentQuestionNumber
+            currentQuestionNumber = int(questionNumber)
+            askedQuestions.append(str(questionNumber))
+            #questionNumber = randomQuestion()
+
+            global currentQuestionType
+            currentQuestionType = queryQuestionTypeDB(questionNumber, languageDim)
+
+            global realAnswers
+            tempRealAnswer = (queryAnswerDB(questionNumber, language, languageDim)).split('*')
+            if len(tempRealAnswer) == 1:
+                realAnswers[int(questionNumber)] = tempRealAnswer[0]
+            else:
+                realAnswers[int(questionNumber)] = tempRealAnswer
+
+            global question
+            question = queryQuestionDB(questionNumber, language, languageDim)
+            global proposal
+            proposal = queryProposalDB(questionNumber, language, languageDim)
+            global proposalList
+            proposalList = proposal[0].split('*')
         
         dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
@@ -1094,8 +1419,8 @@ class AskForSlotActionAnswer3(Action):
         buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
-            dispatcher.utter_message(text=f'{count}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
             buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
@@ -1106,6 +1431,7 @@ class AskForSlotActionAnswer3(Action):
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
         else:
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        questionAsked[3] = True
         return []
 
 class AskForSlotActionAnswer4(Action):
@@ -1115,22 +1441,38 @@ class AskForSlotActionAnswer4(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-        global nextQuestionNumber, currentComplexity, currentTheme
-        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
-        currentTheme = nextTheme
-        currentComplexity = nextComplexity
-        questionNumber = nextQuestionNumber
-        global currentQuestionNumber
-        currentQuestionNumber = int(questionNumber)
-        askedQuestions.append(str(questionNumber))
-        #questionNumber = randomQuestion()
 
-        global realAnswers
-        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+        if 4 not in questionAsked:
 
-        question = queryQuestionDB(questionNumber, language, languageDim)
-        proposal = queryProposalDB(questionNumber, language, languageDim)
-        proposalList = proposal[0].split('*')
+            global nextQuestionNumber, currentComplexity, currentTheme
+            nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+            global currentTheme
+            currentTheme = nextTheme
+            global currentComplexity
+            currentComplexity = nextComplexity
+            global questionNumber
+            questionNumber = nextQuestionNumber
+            global currentQuestionNumber
+            currentQuestionNumber = int(questionNumber)
+            askedQuestions.append(str(questionNumber))
+            #questionNumber = randomQuestion()
+
+            global currentQuestionType
+            currentQuestionType = queryQuestionTypeDB(questionNumber, languageDim)
+
+            global realAnswers
+            tempRealAnswer = (queryAnswerDB(questionNumber, language, languageDim)).split('*')
+            if len(tempRealAnswer) == 1:
+                realAnswers[int(questionNumber)] = tempRealAnswer[0]
+            else:
+                realAnswers[int(questionNumber)] = tempRealAnswer
+
+            global question
+            question = queryQuestionDB(questionNumber, language, languageDim)
+            global proposal
+            proposal = queryProposalDB(questionNumber, language, languageDim)
+            global proposalList
+            proposalList = proposal[0].split('*')
         
         dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
@@ -1142,8 +1484,8 @@ class AskForSlotActionAnswer4(Action):
         buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
-            dispatcher.utter_message(text=f'{count}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
             buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
@@ -1154,6 +1496,7 @@ class AskForSlotActionAnswer4(Action):
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
         else:
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        questionAsked[4] = True
         return []
 
 class AskForSlotActionAnswer5(Action):
@@ -1163,22 +1506,38 @@ class AskForSlotActionAnswer5(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-        global nextQuestionNumber, currentComplexity, currentTheme
-        nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
-        currentTheme = nextTheme
-        currentComplexity = nextComplexity
-        questionNumber = nextQuestionNumber
-        global currentQuestionNumber
-        currentQuestionNumber = int(questionNumber)
-        askedQuestions.append(str(questionNumber))
-        #questionNumber = randomQuestion()
 
-        global realAnswers
-        realAnswers[int(questionNumber)] = (queryAnswerDB(questionNumber, language, languageDim))
+        if 5 not in questionAsked:
 
-        question = queryQuestionDB(questionNumber, language, languageDim)
-        proposal = queryProposalDB(questionNumber, language, languageDim)
-        proposalList = proposal[0].split('*')
+            global nextQuestionNumber, currentComplexity, currentTheme
+            nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
+            global currentTheme
+            currentTheme = nextTheme
+            global currentComplexity
+            currentComplexity = nextComplexity
+            global questionNumber
+            questionNumber = nextQuestionNumber
+            global currentQuestionNumber
+            currentQuestionNumber = int(questionNumber)
+            askedQuestions.append(str(questionNumber))
+            #questionNumber = randomQuestion()
+
+            global currentQuestionType
+            currentQuestionType = queryQuestionTypeDB(questionNumber, languageDim)
+
+            global realAnswers
+            tempRealAnswer = (queryAnswerDB(questionNumber, language, languageDim)).split('*')
+            if len(tempRealAnswer) == 1:
+                realAnswers[int(questionNumber)] = tempRealAnswer[0]
+            else:
+                realAnswers[int(questionNumber)] = tempRealAnswer
+
+            global question
+            question = queryQuestionDB(questionNumber, language, languageDim)
+            global proposal
+            proposal = queryProposalDB(questionNumber, language, languageDim)
+            global proposalList
+            proposalList = proposal[0].split('*')
         
         dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
@@ -1190,8 +1549,8 @@ class AskForSlotActionAnswer5(Action):
         buttonsMCQ = []
         for answerProposal in proposalList:
             count += 1
-            dispatcher.utter_message(text=f'{count}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(count) + '"}'
+            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
             buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
@@ -1202,6 +1561,7 @@ class AskForSlotActionAnswer5(Action):
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}", buttons=buttonsMCQ)
         else:
             dispatcher.utter_message(text=f"{questionType}: {instruction[str(questionType)]}")
+        questionAsked[5] = True
         return []
 
 city_db = {

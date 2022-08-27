@@ -256,17 +256,20 @@ nlu:
     - What are transactions I made to account DE51728838437501118370
 - intent: resolve_entity
   examples: |
-    - [1](mention)
-    - [3](mention)
-    - [2](mention)
-    - [4](mention)
-    - [5](mention)
-    - [one](mention)
-    - [two](mention)
-    - [three](mention)
-    - [four](mention)
-    - [five](mention)
-    - [sox](mention)
+    - [A](mention)
+    - [C](mention)
+    - [B](mention)
+    - [D](mention)
+    - [E](mention)
+    - [F](mention)
+    - [G](mention)
+    - answer [A](mention)
+    - answer [C](mention)
+    - answer [B](mention)
+    - the answer [D](mention)
+    - this is answer [E](mention)
+    - i think answer [F](mention)
+    - the [G](mention)
     - The [first](mention) one
     - The [last](mention) one
     - The [second](mention) one
@@ -286,8 +289,16 @@ nlu:
     - Take the [second](mention) one
     - take the [first](mention)
     - I select the [first](mention)
+    - The [latest](mention)
     - The [latter](mention)
     - take the [second](mention) one
+    - the [first](mention) and the [second](mention)
+    - take the [third](mention) one and the [last](mention) one
+    - [b](mention) and [E](mention)
+    - [a](mention) + the [second](mention)
+    - [e](mention), [c](mention)
+    - la [premiere](mention) et la [c](mention)
+    - la [deuxime](mention) + la [derniere](mention)
     - le [premier](mention)
     - la [première](mention)
     - la [premiere](mention)
@@ -299,8 +310,8 @@ nlu:
     - la [cinquieme](mention) est juste
     - la [dernière](mention) est juste
     - la [derniere](mention)
-    - [un](mention)
-    - [une](mention)
+    - la [un](mention)
+    - la [une](mention)
 - intent: language
   examples: |
     - Java
@@ -342,8 +353,8 @@ nlu:
 - intent: giving_id
   examples: |
     - here's my id [3852283](id_student)
-    - here is my id [0394829](id_student)
-    - my student id is [9385629](id_student)
+    - here is my id [039D829](id_student)
+    - my student id is [E385629](id_student)
     - my student number is [8374912](id_student)
     - this is my student id [1038483](id_student)
     - [29381928](id_student)
@@ -378,6 +389,18 @@ nlu:
     - the id of my exam is [MATH1](exam_id)
     - [MATH1](exam_id)
     - [IALP](exam_id)
+
+- intent: giving_number
+  examples: |
+    - this answer is [34](number)
+    - this is [94](number)
+    - [100](number)
+    - [9](number)
+
+- regex: number
+  examples: |
+    - \d{1,5}
+
 - regex: id_student
   examples: |
     - [0-9]{2}-[0-9]{3}-[0-9]{3}

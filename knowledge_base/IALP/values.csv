@@ -35,3 +35,9 @@ values15f,Java*Python*Scala,Que représente le logo ?,Scala,francais,C'est juste
 values16f,Git*GitHub*GitLab,Que représente le logo ?,Git,francais,C'est juste le logo du system,https://git-scm.com/images/logos/downloads/Git-Icon-1788C.png
 values17f,Git*GitHub*GitLab,Que représente le logo ?,GitLab,francais,C'est juste le logo du system,https://seeklogo.com/images/G/gitlab-logo-757620E430-seeklogo.com.png
 values18f,Git*GitHub*GitLab,Que représente le logo ?,GitHub,francais,C'est juste le logo du system,https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+values19e,Windows*MacOS*Linux,Which of those are under the unix system ?,Linux*MacOS,english,UNIX was developed as an open-source OS using C and Assembly languages,
+values19f,Windows*MacOS*Linux,Lesquels d'entre eux sont sous le systemes unix ?,Linux*MacOS,francais,Unix est une famille de systèmes d'exploitation multitâche et multi-utilisateur,
+values20e,Java*Python*Scalo,Which of those are programming languages ?,Java*Python,english,Scalo is not a programming language but Scala is,
+values20f,Java*Python*Scalo,Lesquels d'entre eux sont des languages de programmation ?,Java*Python,francais,Scalo n'est pas un language de programmation mais Scala l'est,
+values21e,Motherboard*Fatherboard*Ram,Which of those are in a PC ?,Motherboard*Ram,english,Fatherboard isn't a n IT Hardware,
+values21f,Motherboard*Fatherboard*Ram,Lesquels d'entre eux sont dans un PC ?,Motherboard*Ram,francais,un Fatherboard n'est pas un composant informatique,

@@ -29,6 +29,7 @@ intents:
 - what_id_exam
 - what_my_id
 - where_i_live
+- giving_number
 entities:
 - id_student
 - exam_id
@@ -40,7 +41,13 @@ entities:
 - vegetarian
 - mention
 - tf
+- number
 slots:
+  mention_list:
+    type: list
+    mappings:
+    - type: from_entity
+      entity: mention
   nameuser:
     type: any
     mappings:
