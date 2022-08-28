@@ -7,6 +7,7 @@
 
 # This is a simple example for a custom action which utters "Hello World!"
 
+import ast
 from glob import glob
 import json
 import random
@@ -131,7 +132,7 @@ utterMultilanguage = {
         'francais': 'Vous avez dit que la réponse était'
     },
     'eplanationRealAnswer': {
-        'english': 'but it',
+        'english': 'but it is',
         'francais': "mais c'est"
     },
     'eplanationExplanation': {
@@ -203,8 +204,11 @@ def getGrade(studentAnswer, answer, langDim):
     for n in studentAnswer:
         point = queryQuestionPointDB(n, languageDim)
         totalPoint += point
-        if type(studentAnswer[n]) == list:
-            if verifyList(studentAnswer[n], answer[n]) == True:
+        tempStudentAnswer = ''
+        if '[' in studentAnswer[n] and ']' in studentAnswer[n]:
+            tempStudentAnswer = ast.literal_eval(studentAnswer[n])
+        if type(tempStudentAnswer) == list:
+            if verifyList(tempStudentAnswer, answer[n]) == True:
                 tempGrade += point
             else:
                 explication[n] = queryExplicationDB(str(n), langDim)
@@ -1129,13 +1133,16 @@ class ValidationExamForm(FormValidationAction):
                     img = queryImagesDB(str(i), languageDim)
                     if img != '' and img != None:
                         dispatcher.utter_image_url(img)
-                    if type(answers[i]) == list:
+                    tempsAnswers = ''
+                    if '[' in answers[i] and ']' in answers[i]:
+                        tempsAnswers = ast.literal_eval(answers[i])
+                    if type(tempsAnswers) == list:
                         dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAnswer'][language]}:")
-                        for n in answers[i]:
-                            dispatcher.utter_message(text=f"{answers[i][n]}")
+                        for n in tempsAnswers:
+                            dispatcher.utter_message(text=f"{n}")
                         dispatcher.utter_message(text=f"{utterMultilanguage['eplanationRealAnswer'][language]}")
                         for m in realAnswers[i]:
-                            dispatcher.utter_message(text=f"{realAnswers[i][m]}")
+                            dispatcher.utter_message(text=f"{m}")
                         dispatcher.utter_message(text=f"{utterMultilanguage['eplanationExplanation'][language]}: {explication[i]}")
                     else:
                         dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAnswer'][language]}: {answers[i]}, {utterMultilanguage['eplanationRealAnswer'][language]} {realAnswers[i]}.")
@@ -1148,17 +1155,28 @@ class ValidationExamForm(FormValidationAction):
             tempsRealAnswerFormated = []
             tempsIdQuestions  = []
             for n in answers:
-                if type(answers[n]) == list:
-                    t = '/'.join(answers[n])
+                print(f"n: {n}")
+                print(f"answers[n]: {answers[n]}")
+                print(f"type(answers[n]): {type(answers[n])}")
+                if '[' in answers[n] and ']' in answers[n]:
+                    tempAnswer = ast.literal_eval(answers[n])
+                    #tempRealAnswer = ast.literal_eval(realAnswers[n])
+                    
+                else:
+                    tempAnswer = answers[n]
+                if type(tempAnswer) == list:
+                    t = '/'.join(tempAnswer)
                     u = '/'.join(realAnswers[n])
                     tempsAnswerFormated.append(t)
                     tempsRealAnswerFormated.append(u)
                     tempsIdQuestions.append(idQuestions[n])
                 else:
-                    tempsAnswerFormated.append(answers[n])
+                    tempsAnswerFormated.append(tempAnswer)
                     tempsRealAnswerFormated.append(realAnswers[n])
                     tempsIdQuestions.append(idQuestions[n])
+            print(f"tempsAnswerFormated: {tempsAnswerFormated}")
             answersFormated = '*'.join(tempsAnswerFormated)
+            print(f"tempsRealAnswerFormated: {tempsRealAnswerFormated}")
             realAnswerFormated = '*'.join(tempsRealAnswerFormated)
             idQuestionsFormated = '*'.join(tempsIdQuestions)
             
@@ -1231,7 +1249,12 @@ class AskForSlotActionIdStudent(Action):
     def run(
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict
     ) -> List[EventType]:
-
+        global questionAsked
+        questionAsked = {}
+        global answers
+        answers = {}
+        global askedQuestions
+        askedQuestions = []
         dispatcher.utter_message(text=f"Before starting the exam, could you please give us your student id ?")
         return []
 

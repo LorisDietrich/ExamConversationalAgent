@@ -1,3 +1,5 @@
+import ast
+import json
 from typedb.client import *
 id_exam = 'IALP'
 studentAnswer = {1:'22', 2:'2'}
@@ -265,5 +267,7 @@ question(a, b)
 
 
 
-a = {}
-print('w' in a)
+a = ["['Motherboard', 'Ram']", "['MacOS', 'Linux']", 'GitHub', 'Java', 'GitHub']
+b = ast.literal_eval(a[0])
+
+print(b)
