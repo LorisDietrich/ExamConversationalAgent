@@ -1285,7 +1285,8 @@ class ActionResetExamSlots(Action):
     def run(self, dispatcher: CollectingDispatcher,
         tracker: Tracker,
         domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        return [SlotSet('answer1',None), SlotSet('answer2',None), SlotSet('answer3',None), SlotSet('answer4',None), SlotSet('answer5',None)]
+
+        return [SlotSet('id_student',None), SlotSet('id_exam',None), SlotSet('language',None), SlotSet('wanna_explanation',None), SlotSet('answer1',None), SlotSet('answer2',None), SlotSet('answer3',None), SlotSet('answer4',None), SlotSet('answer5',None)]
 
 class AskForSlotActionIdExam(Action):
     def name(self) -> Text:
