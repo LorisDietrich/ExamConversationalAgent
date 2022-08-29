@@ -51,6 +51,8 @@ nextQuestionNumber = 0
 nestedDataDict = {}
 lastAnswerResult = True
 mediumComplexity = 2
+minimumComplexiy = None
+maxComplexity = None
 TrueFalseType = ['TF', 'VF']
 MultipleChoiceType = ['MCQ', 'QCM']
 MultipleChoiceMultipleAnswerType = ['MCQMA', 'QCMPR']
@@ -253,7 +255,7 @@ def getMediumComplexity():
         if max == None or nestedDataDict[index]['complexity'] > max:
             max = nestedDataDict[index]['complexity']
     res = (min+max)/2
-    return int(res)
+    return int(res), min, max
 
 def queryAllValues():
     with TypeDB.core_client("localhost:1729") as client:
@@ -281,6 +283,23 @@ def randomQuestionComplexity2():
     while nestedDataDict[str(random)]['complexity'] != mediumComplexity:
         random = getOnlyNumberValues(getRandomInList(queryAllValues()))
     return str(random)
+
+
+def getQuestionSuggestedMatch():
+    print(nestedDataDict)
+    res = []
+    for i in nestedDataDict:
+        if str(i) not in askedQuestions:
+            if lastAnswerResult == True:
+                if nestedDataDict[i]['complexity'] == (currentComplexity+1) and nestedDataDict[i]['theme'] == currentTheme:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+            elif lastAnswerResult == False:
+                if nestedDataDict[i]['complexity'] == (currentComplexity-1) and nestedDataDict[i]['theme'] == currentTheme:
+                    tempDict = {i: nestedDataDict[i]}
+                    res.append(tempDict)
+    return res
+
 
 def getQuestionPerfectMatch():
     print(nestedDataDict)
@@ -342,7 +361,10 @@ def getBestMatch(arrayNestedDict):
     return tempForRandom[rand]
 
 def getNextQuestionNumber():
-    perfectMatch = getQuestionPerfectMatch()
+    perfectMatch = getQuestionSuggestedMatch()
+    if perfectMatch == []:
+        print('not suggested --> perfect')
+        perfectMatch = getQuestionPerfectMatch()
     if perfectMatch == []:
         print('not perfect --> worst')
         perfectMatch = getQuestionWorstMatch()
@@ -1327,15 +1349,16 @@ class AskForSlotActionAnswer1(Action):
         if 1 not in questionAsked:
 
             global mediumComplexity
-            mediumComplexity = getMediumComplexity()
+            global minimumComplexiy
+            global maxComplexity
+            mediumComplexity, minimumComplexiy, maxComplexity = getMediumComplexity()
 
             now = datetime.now()
             global starting_time
             starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
-
-            #questionNumber = randomQuestionComplexity2()
             global questionNumber
-            questionNumber = '22'
+            questionNumber = randomQuestionComplexity2()
+            
             askedQuestions.append(str(questionNumber))
 
             global currentQuestionNumber
