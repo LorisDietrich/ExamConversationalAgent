@@ -1371,11 +1371,12 @@ class AskForSlotActionAnswer1(Action):
         count = 0
         global buttonsMCQ
         buttonsMCQ = []
-        for answerProposal in proposalList:
-            count += 1
-            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
-            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
+        if len(proposalList) > 1:
+            for answerProposal in proposalList:
+                count += 1
+                dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+                tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
+                buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
 
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
@@ -1436,11 +1437,12 @@ class AskForSlotActionAnswer2(Action):
         count = 0
         global buttonsMCQ
         buttonsMCQ = []
-        for answerProposal in proposalList:
-            count += 1
-            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
-            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
+        if len(proposalList) > 1:
+            for answerProposal in proposalList:
+                count += 1
+                dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+                tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
+                buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
@@ -1501,11 +1503,12 @@ class AskForSlotActionAnswer3(Action):
         count = 0
         global buttonsMCQ
         buttonsMCQ = []
-        for answerProposal in proposalList:
-            count += 1
-            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
-            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
+        if len(proposalList) > 1:
+            for answerProposal in proposalList:
+                count += 1
+                dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+                tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
+                buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
@@ -1566,11 +1569,12 @@ class AskForSlotActionAnswer4(Action):
         count = 0
         global buttonsMCQ
         buttonsMCQ = []
-        for answerProposal in proposalList:
-            count += 1
-            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
-            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
+        if len(proposalList) > 1:
+            for answerProposal in proposalList:
+                count += 1
+                dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+                tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
+                buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
@@ -1631,11 +1635,12 @@ class AskForSlotActionAnswer5(Action):
         count = 0
         global buttonsMCQ
         buttonsMCQ = []
-        for answerProposal in proposalList:
-            count += 1
-            dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
-            tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
-            buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
+        if len(proposalList) > 1:
+            for answerProposal in proposalList:
+                count += 1
+                dispatcher.utter_message(text=f'{alphabet[count-1]}: {answerProposal}')
+                tempPayload = '/resolve_entity{"mention": "' + str(alphabet[count-1]) + '"}'
+                buttonsMCQ.append({"title": answerProposal, "payload": tempPayload})
         
         questionType = queryQuestionTypeDB(questionNumber, languageDim)
         idQuestions[int(questionNumber)] = f'{questionNumber}{languageDim}'
