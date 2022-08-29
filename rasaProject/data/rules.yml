@@ -103,6 +103,15 @@ rules:
     - action: exam_form
     - active_loop: exam_form
 
+- rule: list all language
+  condition:
+    - active_loop: exam_form
+  steps:
+    - intent: what_language
+    - action: action_what_language
+    - action: exam_form
+    - active_loop: exam_form
+
 - rule: interruption bot exam id exam form
   condition: 
     - active_loop: exam_form

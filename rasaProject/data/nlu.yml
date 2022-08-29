@@ -381,6 +381,23 @@ nlu:
     - my prefered language is [english](language)
     - i want the language to be [french](language)
     - [english](language)
+
+- intent: what_language
+  examples: |
+    - what is all available language
+    - what is all available language for the exam
+    - what is all available language here
+    - what is all language
+    - what is all language for the exam
+    - what is all language here
+    - could you list me all languages
+    - list of all language
+    - list me all language for the exam
+    - what is the language
+    - what is the language i can pass the exam
+    - the exam could be in what language ?
+    - in wich language could the exam be ?
+
 - intent: giving_exam_id
   examples: |
     - my exam is [IALP](exam_id)

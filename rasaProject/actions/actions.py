@@ -390,6 +390,19 @@ def queryAllDatabase():
 
 exams = queryAllDatabase()
 
+def queryAllLanguageDB():
+    with TypeDB.core_client("localhost:1729") as client:
+        with client.session(id_exam, SessionType.DATA) as session:
+            with session.transaction(TransactionType.READ) as read_transaction:
+                query = 'match $x isa values, has language $q; get $q;'
+                answer_iterator = read_transaction.query().match(query)
+                res = []
+                for answer in answer_iterator:
+                    temp = answer.get('q').get_value()
+                    if temp not in res:
+                        res.append(temp)
+                return res
+
 def queryExplicationDB(questionNumber, langDim):
     with TypeDB.core_client("localhost:1729") as client:
         with client.session(id_exam, SessionType.DATA) as session:
@@ -1648,7 +1661,19 @@ class ActionTellTime(Action):
         
         return []
 
+class ActionWhatLanguage(Action):
+    def name(self) -> Text:
+        return "action_what_language"
 
+    def run(self, dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        dispatcher.utter_message(text=f"Here are all available language for this exam :")
+        availableLanguage = queryAllLanguageDB()
+        for lang in availableLanguage:
+            dispatcher.utter_message(text=f"{lang}")
+        return []
 
 class ActionRememberWhereILive(Action):
     def name(self) -> Text:

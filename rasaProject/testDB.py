@@ -218,17 +218,20 @@ def queryProposalDB(questionNumber, lang, langDim):
                     res.append(answer.get('q').get_value())
                 return res
 
-def queryImagesDB(questionNumber, langDim):
+def queryAllLanguageDB():
     with TypeDB.core_client("localhost:1729") as client:
         with client.session(id_exam, SessionType.DATA) as session:
             with session.transaction(TransactionType.READ) as read_transaction:
-                query = 'match $x isa values, has identifier $i, has images $q; {$i = "values'
-                query += f'{questionNumber}{langDim}'
-                query += '";}; get $q;'
+                query = 'match $x isa values, has language $q; get $q;'
                 answer_iterator = read_transaction.query().match(query)
+                res = []
                 for answer in answer_iterator:
-                    res = answer.get('q').get_value()
-                    return str(res)
+                    temp = answer.get('q').get_value()
+                    if temp not in res:
+                        res.append(temp)
+                return res
+
+print(queryAllLanguageDB())
 
 questionNumber = '18'
 languageDim = 'f'
@@ -257,6 +260,8 @@ def parse_data_to_dictionaries():
             items.append(item)  # 2
     return items
 
+"""
+
 a = 2
 b = [3,5,1,5]
 
@@ -265,9 +270,36 @@ def question(n1, listNombre):
 
 question(a, b)
 
+"""
+
+"""
+
+c = 3
+d = 5
+e = 8
+
+def question(c):
+    e = c + d
+    pass
+
+question(2)
+print(e)
 
 
-a = ["['Motherboard', 'Ram']", "['MacOS', 'Linux']", 'GitHub', 'Java', 'GitHub']
-b = ast.literal_eval(a[0])
+"""
 
-print(b)
+"""
+
+c = 3
+d = 5
+e = 8
+
+def question(c):
+    global e
+    e = c + d
+    pass
+
+question(2)
+print(e)
+
+"""

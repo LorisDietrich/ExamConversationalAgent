@@ -30,6 +30,7 @@ intents:
 - what_my_id
 - where_i_live
 - giving_number
+- what_language
 entities:
 - id_student
 - exam_id
@@ -228,6 +229,7 @@ actions:
 - action_ask_wanna_explanation
 - action_compare_entities
 - action_list_exam
+- action_what_language
 - action_remember_where_i_live
 - action_reset_exam_slots
 - action_reset_pizza_slots
