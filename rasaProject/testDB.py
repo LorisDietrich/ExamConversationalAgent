@@ -260,17 +260,15 @@ def parse_data_to_dictionaries():
             items.append(item)  # 2
     return items
 
-"""
 
 a = 2
 b = [3,5,1,5]
 
 def question(n1, listNombre):
-    return listNombre[n1] + listNombre[-1]
+    return listNombre[n1] + listNombre[1]
 
 question(a, b)
 
-"""
 
 """
 
@@ -285,8 +283,9 @@ def question(c):
 question(2)
 print(e)
 
-
 """
+
+
 
 """
 

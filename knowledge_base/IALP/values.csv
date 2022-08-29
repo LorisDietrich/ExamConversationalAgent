@@ -41,3 +41,9 @@ values20e,Java*Python*Scalo,Which of those are programming languages ?,Java*Pyth
 values20f,Java*Python*Scalo,Lesquels d'entre eux sont des languages de programmation ?,Java*Python,francais,Scalo n'est pas un language de programmation mais Scala l'est,
 values21e,Motherboard*Fatherboard*Ram,Which of those are in a PC ?,Motherboard*Ram,english,Fatherboard isn't a n IT Hardware,
 values21f,Motherboard*Fatherboard*Ram,Lesquels d'entre eux sont dans un PC ?,Motherboard*Ram,francais,un Fatherboard n'est pas un composant informatique,
+values22e,,What is the output in the terminal ?,6,english,See the documentation of list index,https://i.ibb.co/mcPDmxR/question-Array.png
+values23e,,What is the output in the terminal ?,7,english,See the documentation of variable,https://i.ibb.co/TBgfv8m/question-Not-Global.png
+values24e,,What is the output in the terminal ?,8,english,See the documentation of variable,https://i.ibb.co/YPZcPM9/question-Global.png
+values22f,,Quel est l'output dans le terminal ?,6,francais,Regardez la documentation des index de list index,https://i.ibb.co/mcPDmxR/question-Array.png
+values23f,,Quel est l'output dans le terminal ?,7,francais,Regardez la documentation de la portée des variables,https://i.ibb.co/TBgfv8m/question-Not-Global.png
+values24f,,Quel est l'output dans le terminal ?,8,francais,Regardez la documentation de la portée des variables,https://i.ibb.co/YPZcPM9/question-Global.png

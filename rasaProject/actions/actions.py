@@ -63,11 +63,12 @@ instruction = {
     'TF': 'Please, answer this question with a true or false statement.',
     'MCQ': '--> Multiple choice question. Please, answer with the letter of the best answer.',
     'MCQMA': '--> Multiple choices question with multiple answers. Please, answer with the letters of the best answers.',
+    'NUMBER':'Please, answer with the number you think it is the answer',
     #fr
     'VF': "S'il vous plait, répondez par vrai ou faux.",
     'QCM': "--> Question à choix multiple. S'il vous plait, répondez avec la lettre de la meilleure réponse.",
-    'QCMPR': "--> Question à choix multiples avec plusieurs réponses. S'il vous plait, répondez avec les lettres des meilleures réponses."
-
+    'QCMPR': "--> Question à choix multiples avec plusieurs réponses. S'il vous plait, répondez avec les lettres des meilleures réponses.",
+    'NOMBRE': "S'il vous plait, répondez par le nombre que vous pensez être la réponse"
 }
 
 mapping = {
@@ -150,6 +151,10 @@ utterMultilanguage = {
     'multipleAnswers': {
         'english': "There is more than one right answer. Please give us a least another...",
         'francais': "Il y a plus qu'une réponse possible. Donnez en au moins une autre..."
+    },
+    'skipQuestion': {
+        'english': "You just skipped the question, it's considered as a incorrect answer",
+        'francais': "Vous venez de passer la question, c'est considéré comme une mauvaise réponse"
     }
 }
 
@@ -575,6 +580,10 @@ class ValidationExamForm(FormValidationAction):
                     tempSlot = tracker.get_slot('mention_list')
                 else:
                     tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+            elif currentIntent == 'giving_number':
+                tempSlot = next(tracker.get_latest_entity_values('number'), None)
+            elif currentIntent == 'giving_number':
+                tempSlot = next(tracker.get_latest_entity_values('number'), None)
 
             return { 'answer1': tempSlot }
     
@@ -594,6 +603,8 @@ class ValidationExamForm(FormValidationAction):
                     tempSlot = tracker.get_slot('mention_list')
                 else:
                     tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+            elif currentIntent == 'giving_number':
+                tempSlot = next(tracker.get_latest_entity_values('number'), None)
 
             return { 'answer2': tempSlot }
 
@@ -613,6 +624,8 @@ class ValidationExamForm(FormValidationAction):
                     tempSlot = tracker.get_slot('mention_list')
                 else:
                     tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+            elif currentIntent == 'giving_number':
+                tempSlot = next(tracker.get_latest_entity_values('number'), None)
 
             return { 'answer3': tempSlot }
 
@@ -632,6 +645,8 @@ class ValidationExamForm(FormValidationAction):
                     tempSlot = tracker.get_slot('mention_list')
                 else:
                     tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+            elif currentIntent == 'giving_number':
+                tempSlot = next(tracker.get_latest_entity_values('number'), None)
 
             return { 'answer4': tempSlot }
 
@@ -651,6 +666,8 @@ class ValidationExamForm(FormValidationAction):
                     tempSlot = tracker.get_slot('mention_list')
                 else:
                     tempSlot = next(tracker.get_latest_entity_values('mention'), None)
+            elif currentIntent == 'giving_number':
+                tempSlot = next(tracker.get_latest_entity_values('number'), None)
 
             return { 'answer5': tempSlot }
 
@@ -751,7 +768,10 @@ class ValidationExamForm(FormValidationAction):
                 else:
                     answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                     answer = proposalArray[answerTemp-1]
+            elif currentIntent == 'giving_number':
+                answer = slot_value
             elif currentIntent == 'skip_exam':
+                dispatcher.utter_message(text=f"{utterMultilanguage['skipQuestion'][language]}")
                 answer = 'Na'
             global currentMention
             global lastAnswerResult
@@ -765,7 +785,7 @@ class ValidationExamForm(FormValidationAction):
                     for a in answer:
                         currentMention.append(a)
                     if len(currentMention) == 1:
-                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers'][language]}")
                         return { 'answer1': None }
                     else:
                         lastAnswerResult = True
@@ -832,7 +852,10 @@ class ValidationExamForm(FormValidationAction):
                 else:
                     answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                     answer = proposalArray[answerTemp-1]
+            elif currentIntent == 'giving_number':
+                answer = slot_value
             elif currentIntent == 'skip_exam':
+                dispatcher.utter_message(text=f"{utterMultilanguage['skipQuestion'][language]}")
                 answer = 'Na'
             global currentMention
             global lastAnswerResult
@@ -846,7 +869,7 @@ class ValidationExamForm(FormValidationAction):
                     for a in answer:
                         currentMention.append(a)
                     if len(currentMention) == 1:
-                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers'][language]}")
                         return { 'answer2': None }
                     else:
                         lastAnswerResult = True
@@ -913,7 +936,10 @@ class ValidationExamForm(FormValidationAction):
                 else:
                     answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                     answer = proposalArray[answerTemp-1]
+            elif currentIntent == 'giving_number':
+                answer = slot_value
             elif currentIntent == 'skip_exam':
+                dispatcher.utter_message(text=f"{utterMultilanguage['skipQuestion'][language]}")
                 answer = 'Na'
             global currentMention
             global lastAnswerResult
@@ -927,7 +953,7 @@ class ValidationExamForm(FormValidationAction):
                     for a in answer:
                         currentMention.append(a)
                     if len(currentMention) == 1:
-                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers'][language]}")
                         return { 'answer2': None }
                     else:
                         lastAnswerResult = True
@@ -994,7 +1020,10 @@ class ValidationExamForm(FormValidationAction):
                 else:
                     answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                     answer = proposalArray[answerTemp-1]
+            elif currentIntent == 'giving_number':
+                answer = slot_value
             elif currentIntent == 'skip_exam':
+                dispatcher.utter_message(text=f"{utterMultilanguage['skipQuestion'][language]}")
                 answer = 'Na'
             global currentMention
             global lastAnswerResult
@@ -1008,7 +1037,7 @@ class ValidationExamForm(FormValidationAction):
                     for a in answer:
                         currentMention.append(a)
                     if len(currentMention) == 1:
-                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers'][language]}")
                         return { 'answer2': None }
                     else:
                         lastAnswerResult = True
@@ -1075,7 +1104,10 @@ class ValidationExamForm(FormValidationAction):
                 else:
                     answerTemp = get_key_from_value(mapping, str(slot_value).lower())
                     answer = proposalArray[answerTemp-1]
+            elif currentIntent == 'giving_number':
+                answer = slot_value
             elif currentIntent == 'skip_exam':
+                dispatcher.utter_message(text=f"{utterMultilanguage['skipQuestion'][language]}")
                 answer = 'Na'
             global currentMention
             global lastAnswerResult
@@ -1089,7 +1121,7 @@ class ValidationExamForm(FormValidationAction):
                     for a in answer:
                         currentMention.append(a)
                     if len(currentMention) == 1:
-                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers']['english']}")
+                        dispatcher.utter_message(text=f"{utterMultilanguage['multipleAnswers'][language]}")
                         return { 'answer2': None }
                     else:
                         lastAnswerResult = True
@@ -1303,7 +1335,7 @@ class AskForSlotActionAnswer1(Action):
 
             #questionNumber = randomQuestionComplexity2()
             global questionNumber
-            questionNumber = '21'
+            questionNumber = '22'
             askedQuestions.append(str(questionNumber))
 
             global currentQuestionNumber

@@ -413,6 +413,8 @@ nlu:
     - this is [94](number)
     - [100](number)
     - [9](number)
+    - it's [12](number)
+    - the answer is [2](number)
 
 - regex: number
   examples: |
