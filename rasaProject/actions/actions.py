@@ -157,6 +157,14 @@ utterMultilanguage = {
     'skipQuestion': {
         'english': "You just skipped the question, it's considered as a incorrect answer",
         'francais': "Vous venez de passer la question, c'est considéré comme une mauvaise réponse"
+    },
+    'firstTheme': {
+        'english': 'The theme choosen is ',
+        'francais': 'Le thème choisi est '
+    },
+    'changeTheme': {
+        'english': 'We are now changing the theme',
+        'francais': 'Nous allons changeons de thème'
     }
 }
 
@@ -831,7 +839,7 @@ class ValidationExamForm(FormValidationAction):
                     lastAnswerResult = True
                 else: 
                     lastAnswerResult = False
-            if currentMention != []:
+            if len(currentMention) > 1:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
                 for ans in currentMention:
                     dispatcher.utter_message(text=f"{ans}")
@@ -841,7 +849,12 @@ class ValidationExamForm(FormValidationAction):
                     dispatcher.utter_message(text=f"{ans}")
             else:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
-            answers[int(askedQuestions[-1])] = (str(answer))
+            if type(answer) == list:
+                answers[int(askedQuestions[-1])] = str(answer)
+            elif len(currentMention) > 1:
+                answers[int(askedQuestions[-1])] = str(currentMention)
+            else:
+                answers[int(askedQuestions[-1])] = (str(answer))
             SlotSet('mention_list', None)
             currentMention = []
             return { 'answer1': answer }
@@ -915,7 +928,7 @@ class ValidationExamForm(FormValidationAction):
                     lastAnswerResult = True
                 else: 
                     lastAnswerResult = False
-            if currentMention != []:
+            if len(currentMention) > 1:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
                 for ans in currentMention:
                     dispatcher.utter_message(text=f"{ans}")
@@ -925,7 +938,12 @@ class ValidationExamForm(FormValidationAction):
                     dispatcher.utter_message(text=f"{ans}")
             else:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
-            answers[int(askedQuestions[-1])] = (str(answer))
+            if type(answer) == list:
+                answers[int(askedQuestions[-1])] = str(answer)
+            elif len(currentMention) > 1:
+                answers[int(askedQuestions[-1])] = str(currentMention)
+            else:
+                answers[int(askedQuestions[-1])] = (str(answer))
             SlotSet('mention_list', None)
             currentMention = []
             return { 'answer2': answer }
@@ -999,7 +1017,7 @@ class ValidationExamForm(FormValidationAction):
                     lastAnswerResult = True
                 else: 
                     lastAnswerResult = False
-            if currentMention != []:
+            if len(currentMention) > 1:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
                 for ans in currentMention:
                     dispatcher.utter_message(text=f"{ans}")
@@ -1009,7 +1027,12 @@ class ValidationExamForm(FormValidationAction):
                     dispatcher.utter_message(text=f"{ans}")
             else:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
-            answers[int(askedQuestions[-1])] = (str(answer))
+            if type(answer) == list:
+                answers[int(askedQuestions[-1])] = str(answer)
+            elif len(currentMention) > 1:
+                answers[int(askedQuestions[-1])] = str(currentMention)
+            else:
+                answers[int(askedQuestions[-1])] = (str(answer))
             SlotSet('mention_list', None)
             currentMention = []
             return { 'answer3': answer }
@@ -1083,7 +1106,7 @@ class ValidationExamForm(FormValidationAction):
                     lastAnswerResult = True
                 else: 
                     lastAnswerResult = False
-            if currentMention != []:
+            if len(currentMention) > 1:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
                 for ans in currentMention:
                     dispatcher.utter_message(text=f"{ans}")
@@ -1093,7 +1116,12 @@ class ValidationExamForm(FormValidationAction):
                     dispatcher.utter_message(text=f"{ans}")
             else:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
-            answers[int(askedQuestions[-1])] = (str(answer))
+            if type(answer) == list:
+                answers[int(askedQuestions[-1])] = str(answer)
+            elif len(currentMention) > 1:
+                answers[int(askedQuestions[-1])] = str(currentMention)
+            else:
+                answers[int(askedQuestions[-1])] = (str(answer))
             SlotSet('mention_list', None)
             currentMention = []
             return { 'answer4': answer }
@@ -1167,7 +1195,7 @@ class ValidationExamForm(FormValidationAction):
                     lastAnswerResult = True
                 else: 
                     lastAnswerResult = False
-            if currentMention != []:
+            if len(currentMention) > 1:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}:")
                 for ans in currentMention:
                     dispatcher.utter_message(text=f"{ans}")
@@ -1177,7 +1205,12 @@ class ValidationExamForm(FormValidationAction):
                     dispatcher.utter_message(text=f"{ans}")
             else:
                 dispatcher.utter_message(text=f"{utterMultilanguage['rememberAnswer'][language]}: {answer}.")
-            answers[int(askedQuestions[-1])] = (str(answer))
+            if type(answer) == list:
+                answers[int(askedQuestions[-1])] = str(answer)
+            elif len(currentMention) > 1:
+                answers[int(askedQuestions[-1])] = str(currentMention)
+            else:
+                answers[int(askedQuestions[-1])] = (str(answer))
             SlotSet('mention_list', None)
             currentMention = []
             return { 'answer5': answer }
@@ -1203,10 +1236,14 @@ class ValidationExamForm(FormValidationAction):
                     tempsAnswers = ''
                     if '[' in answers[i] and ']' in answers[i]:
                         tempsAnswers = ast.literal_eval(answers[i])
-                    if type(tempsAnswers) == list:
+                    if type(tempsAnswers) == list or type(answers[i]) == list:
                         dispatcher.utter_message(text=f"{utterMultilanguage['eplanationAnswer'][language]}:")
-                        for n in tempsAnswers:
-                            dispatcher.utter_message(text=f"{n}")
+                        if type(tempsAnswers) == list:
+                            for n in tempsAnswers:
+                                dispatcher.utter_message(text=f"{n}")
+                        else: 
+                            for n in answers[i]:
+                                dispatcher.utter_message(text=f"{n}")
                         dispatcher.utter_message(text=f"{utterMultilanguage['eplanationRealAnswer'][language]}")
                         for m in realAnswers[i]:
                             dispatcher.utter_message(text=f"{m}")
@@ -1225,13 +1262,14 @@ class ValidationExamForm(FormValidationAction):
                 print(f"n: {n}")
                 print(f"answers[n]: {answers[n]}")
                 print(f"type(answers[n]): {type(answers[n])}")
+                tempAnswer = ''
                 if '[' in answers[n] and ']' in answers[n]:
                     tempAnswer = ast.literal_eval(answers[n])
                     #tempRealAnswer = ast.literal_eval(realAnswers[n])
                     
                 else:
                     tempAnswer = answers[n]
-                if type(tempAnswer) == list:
+                if type(tempAnswer) == list or type(answers[n]) == list:
                     t = '/'.join(tempAnswer)
                     u = '/'.join(realAnswers[n])
                     tempsAnswerFormated.append(t)
@@ -1347,6 +1385,11 @@ class AskForSlotActionAnswer1(Action):
 
         createNestedDataDict(language, languageDim)
 
+        global buttonsTF
+        varTrue = mappingTF[language]['True']
+        varFalse = mappingTF[language]['False']
+        buttonsTF = [{"title": varTrue , "payload": '/affirm'}, {"title": varFalse , "payload": '/deny'}]
+
         if 1 not in questionAsked:
 
             global mediumComplexity
@@ -1359,7 +1402,7 @@ class AskForSlotActionAnswer1(Action):
             starting_time = now.strftime("%d/%m/%Y %H:%M:%S")
             global questionNumber
             questionNumber = randomQuestionComplexity2()
-            
+            #questionNumber = '1'
             askedQuestions.append(str(questionNumber))
 
             global currentQuestionNumber
@@ -1370,6 +1413,7 @@ class AskForSlotActionAnswer1(Action):
 
             global currentTheme
             currentTheme = queryQuestionThemeDB(questionNumber, languageDim)
+            dispatcher.utter_message(text=f"{utterMultilanguage['firstTheme'][language]}: {currentTheme}")
 
             global currentQuestionType
             currentQuestionType = queryQuestionTypeDB(questionNumber, languageDim)
@@ -1387,7 +1431,6 @@ class AskForSlotActionAnswer1(Action):
             global proposalList
             proposalList = proposal[0].split('*')
             
-        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
         img = queryImagesDB(questionNumber, languageDim)
         if img != '' and img != None:
@@ -1426,7 +1469,11 @@ class AskForSlotActionAnswer2(Action):
             global nextQuestionNumber, currentComplexity, currentTheme
             nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
             global currentTheme
-            currentTheme = nextTheme
+            if str(nextTheme).lower() != str(currentTheme).lower():
+                currentTheme = nextTheme
+                dispatcher.utter_message(text=f"{utterMultilanguage['changeTheme'][language]}.")
+                dispatcher.utter_message(text=f"{utterMultilanguage['firstTheme'][language]}: {currentTheme}")
+            
             global currentComplexity
             currentComplexity = nextComplexity
             global questionNumber
@@ -1453,7 +1500,6 @@ class AskForSlotActionAnswer2(Action):
             global proposalList
             proposalList = proposal[0].split('*')
         
-        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
         img = queryImagesDB(questionNumber, languageDim)
         if img != '' and img != None:
@@ -1492,7 +1538,11 @@ class AskForSlotActionAnswer3(Action):
             global nextQuestionNumber, currentComplexity, currentTheme
             nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
             global currentTheme
-            currentTheme = nextTheme
+            if str(nextTheme).lower() != str(currentTheme).lower():
+                currentTheme = nextTheme
+                dispatcher.utter_message(text=f"{utterMultilanguage['changeTheme'][language]}.")
+                dispatcher.utter_message(text=f"{utterMultilanguage['firstTheme'][language]}: {currentTheme}")
+            
             global currentComplexity
             currentComplexity = nextComplexity
             global questionNumber
@@ -1519,7 +1569,6 @@ class AskForSlotActionAnswer3(Action):
             global proposalList
             proposalList = proposal[0].split('*')
         
-        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
         img = queryImagesDB(questionNumber, languageDim)
         if img != '' and img != None:
@@ -1558,7 +1607,11 @@ class AskForSlotActionAnswer4(Action):
             global nextQuestionNumber, currentComplexity, currentTheme
             nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
             global currentTheme
-            currentTheme = nextTheme
+            if str(nextTheme).lower() != str(currentTheme).lower():
+                currentTheme = nextTheme
+                dispatcher.utter_message(text=f"{utterMultilanguage['changeTheme'][language]}.")
+                dispatcher.utter_message(text=f"{utterMultilanguage['firstTheme'][language]}: {currentTheme}")
+            
             global currentComplexity
             currentComplexity = nextComplexity
             global questionNumber
@@ -1585,7 +1638,6 @@ class AskForSlotActionAnswer4(Action):
             global proposalList
             proposalList = proposal[0].split('*')
         
-        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
         img = queryImagesDB(questionNumber, languageDim)
         if img != '' and img != None:
@@ -1624,7 +1676,11 @@ class AskForSlotActionAnswer5(Action):
             global nextQuestionNumber, currentComplexity, currentTheme
             nextQuestionNumber, nextComplexity, nextTheme = getNextQuestionNumber()
             global currentTheme
-            currentTheme = nextTheme
+            if str(nextTheme).lower() != str(currentTheme).lower():
+                currentTheme = nextTheme
+                dispatcher.utter_message(text=f"{utterMultilanguage['changeTheme'][language]}.")
+                dispatcher.utter_message(text=f"{utterMultilanguage['firstTheme'][language]}: {currentTheme}")
+            
             global currentComplexity
             currentComplexity = nextComplexity
             global questionNumber
@@ -1651,7 +1707,6 @@ class AskForSlotActionAnswer5(Action):
             global proposalList
             proposalList = proposal[0].split('*')
         
-        dispatcher.utter_message(text=f"This question is complexity {currentComplexity} in theme {currentTheme}")
         dispatcher.utter_message(text=f"{question}")
         img = queryImagesDB(questionNumber, languageDim)
         if img != '' and img != None:

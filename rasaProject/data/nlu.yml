@@ -30,6 +30,7 @@ nlu:
 - intent: affirm
   examples: |
     - yes
+    - yes please
     - y
     - indeed
     - of course
@@ -58,6 +59,8 @@ nlu:
     - c'est vrai
     - c'est completement vrai
     - totalement vrai
+    - oui volontiers
+    - volontiers
 - intent: deny
   examples: |
     - no
