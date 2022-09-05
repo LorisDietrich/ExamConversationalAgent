@@ -164,7 +164,7 @@ utterMultilanguage = {
     },
     'changeTheme': {
         'english': 'We are now changing the theme',
-        'francais': 'Nous allons changeons de thème'
+        'francais': 'Nous allons maintenant changer de thème'
     }
 }
 
@@ -371,13 +371,10 @@ def getBestMatch(arrayNestedDict):
 def getNextQuestionNumber():
     perfectMatch = getQuestionSuggestedMatch()
     if perfectMatch == []:
-        print('not suggested --> perfect')
         perfectMatch = getQuestionPerfectMatch()
     if perfectMatch == []:
-        print('not perfect --> worst')
         perfectMatch = getQuestionWorstMatch()
     if perfectMatch == []:
-        print('not worst --> random')
         nextNumber = randomQuestion()
         nextComplexity = queryQuestionComplexityDB(nextNumber, languageDim)
         nextTheme = queryQuestionThemeDB(nextNumber, languageDim)
@@ -806,11 +803,6 @@ class ValidationExamForm(FormValidationAction):
             global currentMention
             global lastAnswerResult
             if type(answer) == list:
-                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
-                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
-                    #SlotSet('mention_list',None)
-                    #currentMention = []
-                    #return { 'answer1': None }
                 if len(answer) == 1:
                     for a in answer:
                         currentMention.append(a)
@@ -895,11 +887,6 @@ class ValidationExamForm(FormValidationAction):
             global currentMention
             global lastAnswerResult
             if type(answer) == list:
-                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
-                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
-                    #SlotSet('mention_list',None)
-                    #currentMention = []
-                    #return { 'answer1': None }
                 if len(answer) == 1:
                     for a in answer:
                         currentMention.append(a)
@@ -984,11 +971,6 @@ class ValidationExamForm(FormValidationAction):
             global currentMention
             global lastAnswerResult
             if type(answer) == list:
-                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
-                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
-                    #SlotSet('mention_list',None)
-                    #currentMention = []
-                    #return { 'answer1': None }
                 if len(answer) == 1:
                     for a in answer:
                         currentMention.append(a)
@@ -1073,11 +1055,6 @@ class ValidationExamForm(FormValidationAction):
             global currentMention
             global lastAnswerResult
             if type(answer) == list:
-                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
-                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
-                    #SlotSet('mention_list',None)
-                    #currentMention = []
-                    #return { 'answer1': None }
                 if len(answer) == 1:
                     for a in answer:
                         currentMention.append(a)
@@ -1162,11 +1139,6 @@ class ValidationExamForm(FormValidationAction):
             global currentMention
             global lastAnswerResult
             if type(answer) == list:
-                #elif len(answer) > len(realAnswers[currentQuestionNumber]):
-                    #dispatcher.utter_message(text=f'You have said too much answers. Please give the right answer from the beginning.')
-                    #SlotSet('mention_list',None)
-                    #currentMention = []
-                    #return { 'answer1': None }
                 if len(answer) == 1:
                     for a in answer:
                         currentMention.append(a)
@@ -1213,6 +1185,9 @@ class ValidationExamForm(FormValidationAction):
                 answers[int(askedQuestions[-1])] = (str(answer))
             SlotSet('mention_list', None)
             currentMention = []
+            now = datetime.now()
+            global ending_time
+            ending_time = now.strftime("%d/%m/%Y %H:%M:%S")
             return { 'answer5': answer }
         else:
             dispatcher.utter_message(text=f"{utterMultilanguage['badAnswer'][language]}.")
@@ -1259,9 +1234,6 @@ class ValidationExamForm(FormValidationAction):
             tempsRealAnswerFormated = []
             tempsIdQuestions  = []
             for n in answers:
-                print(f"n: {n}")
-                print(f"answers[n]: {answers[n]}")
-                print(f"type(answers[n]): {type(answers[n])}")
                 tempAnswer = ''
                 if '[' in answers[n] and ']' in answers[n]:
                     tempAnswer = ast.literal_eval(answers[n])

@@ -348,13 +348,21 @@ nlu:
     - How do i find the exam id ?
     - Where is the exam id ?
     - Where is the exam student id ?
+    
 - intent: take_exam
   examples: |
     - i want to start the exam
+    - i want to pass the exam
+    - i would like to pass the exam
+    - pass exam
+    - i want to do the exam
+    - do exam
+    - debute the exam
     - start exam
     - start the exam
     - could we start the test ?
     - i want to begin the exam
+
 - intent: giving_id
   examples: |
     - here's my id [3852283](id_student)
